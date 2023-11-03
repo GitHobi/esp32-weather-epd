@@ -1,5 +1,7 @@
 #ifndef __ICONS_48x48_H__
 #define __ICONS_48x48_H__
+#include "48x48/gesamte_datei.h"
+/*
 #include "48x48/air_filter_48x48.h"
 #include "48x48/battery_0_bar_0deg_48x48.h"
 #include "48x48/battery_0_bar_180deg_48x48.h"
@@ -1042,4 +1044,5 @@
 #include "48x48/wi_wind_beaufort_8_48x48.h"
 #include "48x48/wi_wind_beaufort_9_48x48.h"
 #include "48x48/wi_windy_48x48.h"
+*/
 #endif

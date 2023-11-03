@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_FREESANS_H__
 #define __FONTS_FREESANS_H__
 #include "FreeSans/FreeSans_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b FreeSans_8pt8b
 #define FONT_9pt8b FreeSans_9pt8b
 #endif
+*/

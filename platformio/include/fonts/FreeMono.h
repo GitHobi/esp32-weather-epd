@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_FREEMONO_H__
 #define __FONTS_FREEMONO_H__
 #include "FreeMono/FreeMono_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b FreeMono_8pt8b
 #define FONT_9pt8b FreeMono_9pt8b
 #endif
+*/

@@ -64,6 +64,15 @@ typedef struct owm_feels_like
 } owm_owm_feels_like_t;
 
 /*
+ * Response for Homeassistant data
+ */
+typedef struct ha_resp_data
+{
+  double outside_temperature;
+} ha_resp_data_t;
+
+
+/*
  * Current weather data API response
  */
 typedef struct owm_current
@@ -85,6 +94,8 @@ typedef struct owm_current
   float   rain_1h;          // (where available) Rain volume for last hour, mm
   float   snow_1h;          // (where available) Snow volume for last hour, mm
   owm_weather_t         weather;
+  ha_resp_data_t        homeassistant;
+  
 } owm_current_t;
 
 /*
@@ -160,6 +171,8 @@ typedef struct owm_alerts
   String  tags;             // Type of severe weather
 } owm_alerts_t;
 
+
+
 /*
  * Response from OpenWeatherMap's OneCall API
  *
@@ -172,6 +185,7 @@ typedef struct owm_resp_onecall
   String  timezone;         // Timezone name for the requested location
   int     timezone_offset;  // Shift in seconds from UTC
   owm_current_t   current;
+  
   // owm_minutely_t  minutely[OWM_NUM_MINUTELY];
 
   owm_hourly_t    hourly[OWM_NUM_HOURLY];
@@ -210,6 +224,8 @@ typedef struct owm_resp_air_pollution
   owm_components_t components;
   int64_t          dt[OWM_NUM_AIR_POLLUTION];         // Date and time, Unix, UTC;
 } owm_resp_air_pollution_t;
+
+
 
 DeserializationError deserializeOneCall(WiFiClient &json,
                                         owm_resp_onecall_t &r);

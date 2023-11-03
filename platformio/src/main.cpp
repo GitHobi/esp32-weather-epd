@@ -16,31 +16,40 @@
  */
 
 #include <Arduino.h>
-#include <Adafruit_BME280.h>
-#include <Adafruit_Sensor.h>
+//#include <Adafruit_BME280.h>
+//#include <Adafruit_Sensor.h>
 #include <Preferences.h>
 #include <time.h>
 #include <WiFi.h>
-#include <Wire.h>
+//#include <Wire.h>
 
 #include "api_response.h"
 #include "client_utils.h"
 #include "config.h"
 #include "display_utils.h"
 #include "icons/icons_196x196.h"
+#include "conversions.h"
 #include "renderer.h"
 #ifndef USE_HTTP
-  #include <WiFiClientSecure.h>
+#include <WiFiClientSecure.h>
 #endif
 #ifdef USE_HTTPS_WITH_CERT_VERIF
-  #include "cert.h"
+#include "cert.h"
 #endif
 
+
+
+
 // too large to allocate locally on stack
-static owm_resp_onecall_t       owm_onecall;
+static owm_resp_onecall_t owm_onecall;
 static owm_resp_air_pollution_t owm_air_pollution;
+//static ha_resp_data_t ha_resp_data;
 
 Preferences prefs;
+
+void callback(){
+   //placeholder callback function
+}
 
 /* Put esp32 into ultra low-power deep-sleep (<11μA).
  * Aligns wake time to the minute. Sleep times defined in config.cpp.
@@ -49,7 +58,7 @@ void beginDeepSleep(unsigned long &startTime, tm *timeInfo)
 {
   if (!getLocalTime(timeInfo))
   {
-    Serial.println("Failed to obtain time before deep-sleep, referencing " \
+    Serial.println("Failed to obtain time before deep-sleep, referencing "
                    "older time.");
   }
 
@@ -86,14 +95,11 @@ void beginDeepSleep(unsigned long &startTime, tm *timeInfo)
 
   if (extraHoursUntilWake == 0)
   { // align wake time to nearest multiple of SLEEP_DURATION
-    sleepDuration = SLEEP_DURATION * 60ULL
-                    - ((timeInfo->tm_min % SLEEP_DURATION) * 60ULL
-                        + timeInfo->tm_sec);
+    sleepDuration = SLEEP_DURATION * 60ULL - ((timeInfo->tm_min % SLEEP_DURATION) * 60ULL + timeInfo->tm_sec);
   }
   else
   { // align wake time to the hour
-    sleepDuration = extraHoursUntilWake * 3600ULL
-                    - (timeInfo->tm_min * 60ULL + timeInfo->tm_sec);
+    sleepDuration = extraHoursUntilWake * 3600ULL - (timeInfo->tm_min * 60ULL + timeInfo->tm_sec);
   }
 
   // if we are within 2 minutes of the next alignment.
@@ -109,9 +115,10 @@ void beginDeepSleep(unsigned long &startTime, tm *timeInfo)
   printHeapUsage();
 #endif
 
+  touchAttachInterrupt(T3, callback, 40); 
+  esp_sleep_enable_touchpad_wakeup();
   esp_sleep_enable_timer_wakeup(sleepDuration * 1000000ULL);
-  Serial.println("Awake for "
-                 + String((millis() - startTime) / 1000.0, 3) + "s");
+  Serial.println("Awake for " + String((millis() - startTime) / 1000.0, 3) + "s");
   Serial.println("Deep-sleep for " + String(sleepDuration) + "s");
   esp_deep_sleep_start();
 } // end beginDeepSleep
@@ -123,6 +130,8 @@ void setup()
   unsigned long startTime = millis();
   Serial.begin(115200);
 
+  
+
 #if DEBUG_LEVEL >= 1
   printHeapUsage();
 #endif
@@ -131,10 +140,10 @@ void setup()
   // DFRobot FireBeetle Esp32-E V1.0 has voltage divider (1M+1M), so readings
   // are multiplied by 2. Readings are divided by 1000 to convert mV to V.
   double batteryVoltage =
-            static_cast<double>(analogRead(PIN_BAT_ADC)) / 1000.0 * (3.5 / 2.0);
-            // use / 1000.0 * (3.3 / 2.0) multiplier above for firebeetle esp32
-            // use / 1000.0 * (3.5 / 2.0) for firebeetle esp32-E
-  Serial.println("Battery voltage: " + String(batteryVoltage,2));
+      static_cast<double>(analogRead(PIN_BAT_ADC)) / 1000.0 * (3.5 / 2.0);
+  // use / 1000.0 * (3.3 / 2.0) multiplier above for firebeetle esp32
+  // use / 1000.0 * (3.5 / 2.0) for firebeetle esp32-E
+  Serial.println("Battery voltage: " + String(batteryVoltage, 2));
 
   // When the battery is low, the display should be updated to reflect that, but
   // only the first time we detect low voltage. The next time the display will
@@ -167,19 +176,15 @@ void setup()
     }
     else if (batteryVoltage <= VERY_LOW_BATTERY_VOLTAGE)
     { // very low battery
-      esp_sleep_enable_timer_wakeup(VERY_LOW_BATTERY_SLEEP_INTERVAL
-                                    * 60ULL * 1000000ULL);
+      esp_sleep_enable_timer_wakeup(VERY_LOW_BATTERY_SLEEP_INTERVAL * 60ULL * 1000000ULL);
       Serial.println("Very low battery voltage!");
-      Serial.println("Deep-sleep for "
-                     + String(VERY_LOW_BATTERY_SLEEP_INTERVAL) + "min");
+      Serial.println("Deep-sleep for " + String(VERY_LOW_BATTERY_SLEEP_INTERVAL) + "min");
     }
     else
     { // low battery
-      esp_sleep_enable_timer_wakeup(LOW_BATTERY_SLEEP_INTERVAL
-                                    * 60ULL * 1000000ULL);
+      esp_sleep_enable_timer_wakeup(LOW_BATTERY_SLEEP_INTERVAL * 60ULL * 1000000ULL);
       Serial.println("Low battery voltage!");
-      Serial.println("Deep-sleep for "
-                    + String(LOW_BATTERY_SLEEP_INTERVAL) + "min");
+      Serial.println("Deep-sleep for " + String(LOW_BATTERY_SLEEP_INTERVAL) + "min");
     }
     esp_deep_sleep_start();
   }
@@ -223,6 +228,9 @@ void setup()
   // BEGIN TIME SYNCHRONIZATION
   configTzTime(TIMEZONE, NTP_SERVER_1, NTP_SERVER_2);
 
+
+  
+
   // MAKE API REQUESTS
 #ifdef USE_HTTP
   WiFiClient client;
@@ -248,6 +256,7 @@ void setup()
     display.powerOff();
     beginDeepSleep(startTime, &timeInfo);
   }
+
   rxStatus = getOWMairpollution(client, owm_air_pollution);
   if (rxStatus != HTTP_CODE_OK)
   {
@@ -264,6 +273,16 @@ void setup()
     beginDeepSleep(startTime, &timeInfo);
   }
 
+
+  /*
+  * Get weather information from home assistant
+  */
+  float inTemp = NAN;
+  float inHumidity = NAN;
+  getHAState ( client, "sensor.temperatur_outdoor", inTemp, inHumidity, owm_onecall);
+
+
+
   // COMPLETE TIME SYNCHRONIZATION
   bool timeConfigured = waitForSNTPSync(&timeInfo);
   killWiFi(); // WiFi no longer needed
@@ -279,19 +298,20 @@ void setup()
     display.powerOff();
     beginDeepSleep(startTime, &timeInfo);
   }
-  
+
   // GET INDOOR TEMPERATURE AND HUMIDITY, start BME280...
-  float inTemp     = NAN;
-  float inHumidity = NAN;
+  //float inTemp = NAN;
+  //float inHumidity = NAN;
+  /*
   Serial.print("Reading from BME280... ");
   TwoWire I2C_bme = TwoWire(0);
   Adafruit_BME280 bme;
 
   I2C_bme.begin(PIN_BME_SDA, PIN_BME_SCL, 100000); // 100kHz
-  if(bme.begin(BME_ADDRESS, &I2C_bme))
+  if (bme.begin(BME_ADDRESS, &I2C_bme))
   {
-    inTemp     = bme.readTemperature(); // Celsius
-    inHumidity = bme.readHumidity();    // %
+    inTemp = bme.readTemperature();  // Celsius
+    inHumidity = bme.readHumidity(); // %
 
     // check if BME readings are valid
     // note: readings are checked again before drawing to screen. If a reading
@@ -312,13 +332,19 @@ void setup()
     statusStr = "BME not found"; // check wiring
     Serial.println(statusStr);
   }
-
+*/
   String refreshTimeStr;
   getRefreshTimeStr(refreshTimeStr, timeConfigured, &timeInfo);
   String dateStr;
   getDateStr(dateStr, &timeInfo);
 
+  
+
   // RENDER FULL REFRESH
+  killWiFi(); // not needed anymore!
+  pinMode ( D6, OUTPUT );
+  digitalWrite ( D6, HIGH);
+
   initDisplay();
   do
   {
@@ -332,7 +358,17 @@ void setup()
 #endif
     drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
   } while (display.nextPage());
+
   display.powerOff();
+
+  
+  digitalWrite ( D6, LOW);
+
+
+    
+
+
+
 
   // DEEP-SLEEP
   beginDeepSleep(startTime, &timeInfo);
@@ -343,4 +379,3 @@ void setup()
 void loop()
 {
 } // end loop
-

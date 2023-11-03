@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_POPPINS_REGULAR_H__
 #define __FONTS_POPPINS_REGULAR_H__
 #include "Poppins_Regular/Poppins_Regular_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b Poppins_Regular_8pt8b
 #define FONT_9pt8b Poppins_Regular_9pt8b
 #endif
+*/

@@ -38,40 +38,46 @@
 #include "icons/icons_196x196.h"
 
 #ifdef DISP_BW_V2
-  GxEPD2_BW<GxEPD2_750_T7,
-            GxEPD2_750_T7::HEIGHT> display(
-    GxEPD2_750_T7(PIN_EPD_CS,
-                  PIN_EPD_DC,
-                  PIN_EPD_RST,
-                  PIN_EPD_BUSY));
+GxEPD2_BW<GxEPD2_750_T7,
+          GxEPD2_750_T7::HEIGHT>
+    display(
+        GxEPD2_750_T7(PIN_EPD_CS,
+                      PIN_EPD_DC,
+                      PIN_EPD_RST,
+                      PIN_EPD_BUSY));
 #endif
 #ifdef DISP_3C_B
-  GxEPD2_3C<GxEPD2_750c_Z08,
-            GxEPD2_750c_Z08::HEIGHT / 2> display(
-    GxEPD2_750c_Z08(PIN_EPD_CS,
-                    PIN_EPD_DC,
-                    PIN_EPD_RST,
-                    PIN_EPD_BUSY));
+GxEPD2_3C<GxEPD2_750c_Z08,
+          GxEPD2_750c_Z08::HEIGHT / 2>
+    display(
+        GxEPD2_750c_Z08(PIN_EPD_CS,
+                        PIN_EPD_DC,
+                        PIN_EPD_RST,
+                        PIN_EPD_BUSY));
 #endif
 #ifdef DISP_7C_F
-  GxEPD2_7C<GxEPD2_730c_GDEY073D46,
-            GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(
-    GxEPD2_730c_GDEY073D46(PIN_EPD_CS,
-                           PIN_EPD_DC,
-                           PIN_EPD_RST,
-                           PIN_EPD_BUSY));
+GxEPD2_7C<GxEPD2_730c_GDEY073D46,
+          GxEPD2_730c_GDEY073D46::HEIGHT / 4>
+    display(
+        GxEPD2_730c_GDEY073D46(PIN_EPD_CS,
+                               PIN_EPD_DC,
+                               PIN_EPD_RST,
+                               PIN_EPD_BUSY));
 #endif
 #ifdef DISP_BW_V1
-  GxEPD2_BW<GxEPD2_750,
-            GxEPD2_750::HEIGHT> display(
-    GxEPD2_750(PIN_EPD_CS,
-               PIN_EPD_DC,
-               PIN_EPD_RST,
-               PIN_EPD_BUSY));
+GxEPD2_BW<GxEPD2_750,
+          GxEPD2_750::HEIGHT>
+    display(
+        GxEPD2_750(PIN_EPD_CS,
+                   PIN_EPD_DC,
+                   PIN_EPD_RST,
+                   PIN_EPD_BUSY));
 #endif
 
+#define FOREGROUND_COLOR GxEPD_BLACK
+#define BACKGROUND_COLOR GxEPD_WHITE
 #ifndef ACCENT_COLOR
-  #define ACCENT_COLOR GxEPD_BLACK
+#define ACCENT_COLOR FOREGROUND_COLOR
 #endif
 
 /* Returns the string width in pixels
@@ -135,7 +141,7 @@ void drawMultiLnString(int16_t x, int16_t y, const String &text,
   // print until we reach max_lines or no more text remains
   while (current_line < max_lines && !textRemaining.isEmpty())
   {
-    int16_t  x1, y1;
+    int16_t x1, y1;
     uint16_t w, h;
 
     display.getTextBounds(textRemaining, 0, 0, &x1, &y1, &w, &h);
@@ -206,7 +212,7 @@ void drawMultiLnString(int16_t x, int16_t y, const String &text,
         }
 
       } // end if (splitAt != -1)
-    } // end inner while
+    }   // end inner while
 
     drawString(x, y + (current_line * line_spacing), subStr, alignment, color);
 
@@ -232,11 +238,13 @@ void initDisplay()
 
   display.setRotation(0);
   display.setTextSize(1);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(FOREGROUND_COLOR);
   display.setTextWrap(false);
-  // display.fillScreen(GxEPD_WHITE);
   display.setFullWindow();
   display.firstPage(); // use paged drawing mode, sets fillScreen(GxEPD_WHITE)
+
+    display.fillScreen(BACKGROUND_COLOR);
+
 } // end initDisplay
 
 /* This function is responsible for drawing the current conditions and
@@ -251,52 +259,54 @@ void drawCurrentConditions(const owm_current_t &current,
   // current weather icon
   display.drawInvertedBitmap(0, 0,
                              getCurrentConditionsBitmap196(current, today),
-                             196, 196, GxEPD_BLACK);
+                             196, 196, FOREGROUND_COLOR);
 
   // current temp
+  if (!std::isnan(current.temp))
+  {
 #ifdef UNITS_TEMP_KELVIN
-  dataStr = String(static_cast<int>(round(current.temp)));
-  unitStr = TXT_UNITS_TEMP_KELVIN;
+    dataStr = String(static_cast<int>(round(current.temp)));
+    unitStr = TXT_UNITS_TEMP_KELVIN;
 #endif
 #ifdef UNITS_TEMP_CELSIUS
-  dataStr = String(static_cast<int>(round(kelvin_to_celsius(current.temp))));
-  unitStr = TXT_UNITS_TEMP_CELSIUS;
+    dataStr = String(static_cast<int>(round(kelvin_to_celsius(current.temp))));
+    unitStr = TXT_UNITS_TEMP_CELSIUS;
 #endif
 #ifdef UNITS_TEMP_FAHRENHEIT
-  dataStr = String(static_cast<int>(round(kelvin_to_fahrenheit(current.temp))));
-  unitStr = TXT_UNITS_TEMP_FAHRENHEIT;
+    dataStr = String(static_cast<int>(round(kelvin_to_fahrenheit(current.temp))));
+    unitStr = TXT_UNITS_TEMP_FAHRENHEIT;
 #endif
-  // FONT_**_temperature fonts only have the character set used for displaying
-  // temperature (0123456789.-\xB0)
+    // FONT_**_temperature fonts only have the character set used for displaying
+    // temperature (0123456789.-\xB0)
+  }
+  else
+  {
+    dataStr = "--";
+  }
   display.setFont(&FONT_48pt8b_temperature);
+
 #if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
-    drawString(196 + 164 / 2 - 20, 196 / 2 + 69 / 2, dataStr, CENTER);
+  drawString(196 + 164 / 2 - 20, 196 / 2 + 69 / 2, dataStr, CENTER);
 #elif defined(DISP_BW_V1)
-    drawString(156 + 164 / 2 - 20, 196 / 2 + 69 / 2, dataStr, CENTER);
+  drawString(156 + 164 / 2 - 20, 196 / 2 + 69 / 2, dataStr, CENTER);
 #endif
+
   display.setFont(&FONT_14pt8b);
   drawString(display.getCursorX(), 196 / 2 - 69 / 2 + 20, unitStr, LEFT);
 
   // current feels like
 #ifdef UNITS_TEMP_KELVIN
-  dataStr = String(TXT_FEELS_LIKE) + ' '
-            + String(static_cast<int>(round(current.feels_like)));
+  dataStr = String(TXT_FEELS_LIKE) + ' ' + String(static_cast<int>(round(current.feels_like)));
 #endif
 #ifdef UNITS_TEMP_CELSIUS
-  dataStr = String(TXT_FEELS_LIKE) + ' '
-            + String(static_cast<int>(round(
-                     kelvin_to_celsius(current.feels_like))))
-            + '\xB0';
+  dataStr = String(TXT_FEELS_LIKE) + ' ' + String(static_cast<int>(round(kelvin_to_celsius(current.feels_like)))) + '\xB0';
 #endif
 #ifdef UNITS_TEMP_FAHRENHEIT
-  dataStr = String(TXT_FEELS_LIKE) + ' '
-            + String(static_cast<int>(round(
-                     kelvin_to_fahrenheit(current.feels_like))))
-            + '\xB0';
+  dataStr = String(TXT_FEELS_LIKE) + ' ' + String(static_cast<int>(round(kelvin_to_fahrenheit(current.feels_like)))) + '\xB0';
 #endif
-  display.setFont(&FONT_12pt8b);
+  display.setFont(&FONT_12pt8br);
 #if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
-  drawString(196 + 164 / 2, 98 + 69 / 2 + 12 + 17, dataStr, CENTER);
+  drawString(196 + 164 / 2, 5+ 98 + 69 / 2 + 12 + 17, dataStr, CENTER);
 #elif defined(DISP_BW_V1)
   drawString(156 + 164 / 2, 98 + 69 / 2 + 12 + 17, dataStr, CENTER);
 #endif
@@ -304,29 +314,19 @@ void drawCurrentConditions(const owm_current_t &current,
   // display.drawLine(0, 196, DISP_WIDTH - 1, 196, GxEPD_BLACK);
 
   // current weather data icons
-  display.drawInvertedBitmap(0, 204 + (48 + 8) * 0,
-                             wi_sunrise_48x48, 48, 48, GxEPD_BLACK);
-  display.drawInvertedBitmap(0, 204 + (48 + 8) * 1,
-                             wi_strong_wind_48x48, 48, 48, GxEPD_BLACK);
-  display.drawInvertedBitmap(0, 204 + (48 + 8) * 2,
-                             wi_day_sunny_48x48, 48, 48, GxEPD_BLACK);
+  display.drawInvertedBitmap(0, 204 + (48 + 8) * 0, wi_sunrise_48x48, 48, 48, FOREGROUND_COLOR);
+  display.drawInvertedBitmap(0, 204 + (48 + 8) * 1, wi_strong_wind_48x48, 48, 48, FOREGROUND_COLOR);
+  display.drawInvertedBitmap(0, 204 + (48 + 8) * 2, wi_day_sunny_48x48, 48, 48, FOREGROUND_COLOR);
 #if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
-  display.drawInvertedBitmap(0, 204 + (48 + 8) * 3,
-                             air_filter_48x48, 48, 48, GxEPD_BLACK);
-  display.drawInvertedBitmap(0, 204 + (48 + 8) * 4,
-                             house_thermometer_48x48, 48, 48, GxEPD_BLACK);
+  display.drawInvertedBitmap(0, 204 + (48 + 8) * 3, air_filter_48x48, 48, 48, FOREGROUND_COLOR);
+  display.drawInvertedBitmap(0, 204 + (48 + 8) * 4, house_thermometer_48x48, 48, 48, FOREGROUND_COLOR);
 #endif
-  display.drawInvertedBitmap(170, 204 + (48 + 8) * 0,
-                             wi_sunset_48x48, 48, 48, GxEPD_BLACK);
-  display.drawInvertedBitmap(170, 204 + (48 + 8) * 1,
-                             wi_humidity_48x48, 48, 48, GxEPD_BLACK);
-  display.drawInvertedBitmap(170, 204 + (48 + 8) * 2,
-                             wi_barometer_48x48, 48, 48, GxEPD_BLACK);
+  display.drawInvertedBitmap(170, 204 + (48 + 8) * 0, wi_sunset_48x48, 48, 48, FOREGROUND_COLOR);
+  display.drawInvertedBitmap(170, 204 + (48 + 8) * 1, wi_humidity_48x48, 48, 48, FOREGROUND_COLOR);
+  display.drawInvertedBitmap(170, 204 + (48 + 8) * 2, wi_barometer_48x48, 48, 48, FOREGROUND_COLOR);
 #if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
-  display.drawInvertedBitmap(170, 204 + (48 + 8) * 3,
-                             visibility_icon_48x48, 48, 48, GxEPD_BLACK);
-  display.drawInvertedBitmap(170, 204 + (48 + 8) * 4,
-                             house_humidity_48x48, 48, 48, GxEPD_BLACK);
+  display.drawInvertedBitmap(170, 204 + (48 + 8) * 3, visibility_icon_48x48, 48, 48, FOREGROUND_COLOR);
+  display.drawInvertedBitmap(170, 204 + (48 + 8) * 4, house_humidity_48x48, 48, 48, FOREGROUND_COLOR);
 #endif
 
   // current weather data labels
@@ -352,44 +352,40 @@ void drawCurrentConditions(const owm_current_t &current,
   time_t ts = current.sunrise;
   tm *timeInfo = localtime(&ts);
   _strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, timeInfo);
-  drawString(48, 204 + 17 / 2 + (48 + 8) * 0 + 48 / 2, timeBuffer, LEFT);
+  drawString(48, 5+ 204 + 17 / 2 + (48 + 8) * 0 + 48 / 2, timeBuffer, LEFT);
 
   // wind
-  display.drawInvertedBitmap(48, 204 + 24 / 2 + (48 + 8) * 1,
-                             getWindBitmap24(current.wind_deg),
-                             24, 24, GxEPD_BLACK);
+  display.drawInvertedBitmap(48, 5+ 204 + 24 / 2 + (48 + 8) * 1, getWindBitmap24(current.wind_deg), 24, 24, FOREGROUND_COLOR);
 #ifdef UNITS_SPEED_METERSPERSECOND
   dataStr = String(static_cast<int>(round(current.wind_speed)));
   unitStr = TXT_UNITS_SPEED_METERSPERSECOND;
 #endif
 #ifdef UNITS_SPEED_FEETPERSECOND
   dataStr = String(static_cast<int>(round(
-                   meterspersecond_to_feetpersecond(current.wind_speed) )));
+      meterspersecond_to_feetpersecond(current.wind_speed))));
   unitStr = TXT_UNITS_SPEED_FEETPERSECOND;
 #endif
 #ifdef UNITS_SPEED_KILOMETERSPERHOUR
-  dataStr = String(static_cast<int>(round(
-                   meterspersecond_to_kilometersperhour(current.wind_speed) )));
+  dataStr = String(static_cast<int>(round(meterspersecond_to_kilometersperhour(current.wind_speed))));
   unitStr = TXT_UNITS_SPEED_KILOMETERSPERHOUR;
 #endif
 #ifdef UNITS_SPEED_MILESPERHOUR
   dataStr = String(static_cast<int>(round(
-                   meterspersecond_to_milesperhour(current.wind_speed) )));
+      meterspersecond_to_milesperhour(current.wind_speed))));
   unitStr = TXT_UNITS_SPEED_MILESPERHOUR;
 #endif
 #ifdef UNITS_SPEED_KNOTS
   dataStr = String(static_cast<int>(round(
-                   meterspersecond_to_knots(current.wind_speed) )));
+      meterspersecond_to_knots(current.wind_speed))));
   unitStr = TXT_UNITS_SPEED_KNOTS;
 #endif
 #ifdef UNITS_SPEED_BEAUFORT
   dataStr = String(meterspersecond_to_beaufort(current.wind_speed));
   unitStr = TXT_UNITS_SPEED_BEAUFORT;
 #endif
-  drawString(48 + 24, 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2, dataStr, LEFT);
+  drawString(48 + 24, 5+ 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2, dataStr, LEFT);
   display.setFont(&FONT_8pt8b);
-  drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2,
-             unitStr, LEFT);
+  drawString(display.getCursorX(), 5+ 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2, unitStr, LEFT);
 
   // uv and air quality indices
   // spacing between end of index value and start of descriptor text
@@ -399,13 +395,13 @@ void drawCurrentConditions(const owm_current_t &current,
   display.setFont(&FONT_12pt8b);
   uint uvi = static_cast<uint>(std::max(round(current.uvi), 0.0f));
   dataStr = String(uvi);
-  drawString(48, 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2, dataStr, LEFT);
+  drawString(48, 5+ 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2, dataStr, LEFT);
   display.setFont(&FONT_7pt8b);
   dataStr = String(getUVIdesc(uvi));
   int max_w = 170 - (display.getCursorX() + sp);
   if (getStringWidth(dataStr) <= max_w)
   { // Fits on a single line, draw along bottom
-    drawString(display.getCursorX() + sp, 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2,
+    drawString(display.getCursorX() + sp, 5+ 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2,
                dataStr, LEFT);
   }
   else
@@ -413,15 +409,11 @@ void drawCurrentConditions(const owm_current_t &current,
     display.setFont(&FONT_5pt8b);
     if (getStringWidth(dataStr) <= max_w)
     { // Fits on a single line with smaller font, draw along bottom
-      drawString(display.getCursorX() + sp,
-                 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2,
-                 dataStr, LEFT);
+      drawString(display.getCursorX() + sp, 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2, dataStr, LEFT);
     }
     else
     { // Does not fit on a single line, draw higher to allow room for 2nd line
-      drawMultiLnString(display.getCursorX() + sp,
-                        204 + 17 / 2 + (48 + 8) * 2 + 48 / 2 - 10,
-                        dataStr, LEFT, max_w, 2, 10);
+      drawMultiLnString(display.getCursorX() + sp,204 + 17 / 2 + (48 + 8) * 2 + 48 / 2 - 10, dataStr, LEFT, max_w, 2, 10);
     }
   }
 
@@ -430,29 +422,24 @@ void drawCurrentConditions(const owm_current_t &current,
   display.setFont(&FONT_12pt8b);
   int aqi = getAQI(owm_air_pollution);
   dataStr = String(aqi);
-  drawString(48, 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, dataStr, LEFT);
+  drawString(48, 5+ 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, dataStr, LEFT);
   display.setFont(&FONT_7pt8b);
   dataStr = String(getAQIdesc(aqi));
   max_w = 170 - (display.getCursorX() + sp);
   if (getStringWidth(dataStr) <= max_w)
   { // Fits on a single line, draw along bottom
-    drawString(display.getCursorX() + sp, 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2,
-               dataStr, LEFT);
+    drawString(display.getCursorX() + sp, 5+ 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, dataStr, LEFT);
   }
   else
   { // use smaller font
     display.setFont(&FONT_5pt8b);
     if (getStringWidth(dataStr) <= max_w)
     { // Fits on a single line with smaller font, draw along bottom
-      drawString(display.getCursorX() + sp,
-                 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2,
-                 dataStr, LEFT);
+      drawString(display.getCursorX() + sp, 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, dataStr, LEFT);
     }
     else
     { // Does not fit on a single line, draw higher to allow room for 2nd line
-      drawMultiLnString(display.getCursorX() + sp,
-                        204 + 17 / 2 + (48 + 8) * 3 + 48 / 2 - 10,
-                        dataStr, LEFT, max_w, 2, 10);
+      drawMultiLnString(display.getCursorX() + sp, 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2 - 10, dataStr, LEFT, max_w, 2, 10);
     }
   }
 
@@ -477,7 +464,7 @@ void drawCurrentConditions(const owm_current_t &current,
 #if defined(UNITS_TEMP_CELSIUS) || defined(UNITS_TEMP_FAHRENHEIT)
   dataStr += "\xB0";
 #endif
-  drawString(48, 204 + 17 / 2 + (48 + 8) * 4 + 48 / 2, dataStr, LEFT);
+  drawString(48, 5+ 204 + 17 / 2 + (48 + 8) * 4 + 48 / 2, dataStr, LEFT);
 #endif // defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
 
   // sunset
@@ -485,14 +472,17 @@ void drawCurrentConditions(const owm_current_t &current,
   ts = current.sunset;
   timeInfo = localtime(&ts);
   _strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, timeInfo);
-  drawString(170 + 48, 204 + 17 / 2 + (48 + 8) * 0 + 48 / 2, timeBuffer, LEFT);
+  drawString(170 + 48, 5+ 204 + 17 / 2 + (48 + 8) * 0 + 48 / 2, timeBuffer, LEFT);
 
   // humidity
-  dataStr = String(current.humidity);
-  drawString(170 + 48, 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2, dataStr, LEFT);
+  dataStr = "--";
+  if (current.humidity<200)
+  {
+    dataStr = String(current.humidity);
+  }
+  drawString(170 + 48, 5+ 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2, dataStr, LEFT);
   display.setFont(&FONT_8pt8b);
-  drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2,
-             "%", LEFT);
+  drawString(display.getCursorX(), 5+ 204 + 17 / 2 + (48 + 8) * 1 + 48 / 2, "%", LEFT);
 
   // pressure
 #ifdef UNITS_PRES_HECTOPASCALS
@@ -501,48 +491,49 @@ void drawCurrentConditions(const owm_current_t &current,
 #endif
 #ifdef UNITS_PRES_PASCALS
   dataStr = String(static_cast<int>(round(
-                   hectopascals_to_pascals(current.pressure) )));
+      hectopascals_to_pascals(current.pressure))));
   unitStr = TXT_UNITS_PRES_PASCALS;
 #endif
 #ifdef UNITS_PRES_MILLIMETERSOFMERCURY
   dataStr = String(static_cast<int>(round(
-                   hectopascals_to_millimetersofmercury(current.pressure) )));
+      hectopascals_to_millimetersofmercury(current.pressure))));
   unitStr = TXT_UNITS_PRES_MILLIMETERSOFMERCURY;
 #endif
 #ifdef UNITS_PRES_INCHESOFMERCURY
   dataStr = String(round(1e1f *
-                   hectopascals_to_inchesofmercury(current.pressure)
-                   ) / 1e1f, 1);
+                         hectopascals_to_inchesofmercury(current.pressure)) /
+                       1e1f,
+                   1);
   unitStr = TXT_UNITS_PRES_INCHESOFMERCURY;
 #endif
 #ifdef UNITS_PRES_MILLIBARS
   dataStr = String(static_cast<int>(round(
-                   hectopascals_to_millibars(current.pressure) )));
+      hectopascals_to_millibars(current.pressure))));
   unitStr = TXT_UNITS_PRES_MILLIBARS;
 #endif
 #ifdef UNITS_PRES_ATMOSPHERES
   dataStr = String(round(1e3f *
-                   hectopascals_to_atmospheres(current.pressure) )
-                   / 1e3f, 3);
+                         hectopascals_to_atmospheres(current.pressure)) /
+                       1e3f,
+                   3);
   unitStr = TXT_UNITS_PRES_ATMOSPHERES;
 #endif
 #ifdef UNITS_PRES_GRAMSPERSQUARECENTIMETER
   dataStr = String(static_cast<int>(round(
-                   hectopascals_to_gramspersquarecentimeter(current.pressure)
-                   )));
+      hectopascals_to_gramspersquarecentimeter(current.pressure))));
   unitStr = TXT_UNITS_PRES_GRAMSPERSQUARECENTIMETER;
 #endif
 #ifdef UNITS_PRES_POUNDSPERSQUAREINCH
   dataStr = String(round(1e2f *
-                   hectopascals_to_poundspersquareinch(current.pressure)
-                   ) / 1e2f, 2);
+                         hectopascals_to_poundspersquareinch(current.pressure)) /
+                       1e2f,
+                   2);
   unitStr = TXT_UNITS_PRES_POUNDSPERSQUAREINCH;
 #endif
   display.setFont(&FONT_12pt8b);
-  drawString(170 + 48, 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2, dataStr, LEFT);
+  drawString(170 + 48, 5+ 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2, dataStr, LEFT);
   display.setFont(&FONT_8pt8b);
-  drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2,
-             unitStr, LEFT);
+  drawString(display.getCursorX(), 5+ 204 + 17 / 2 + (48 + 8) * 2 + 48 / 2, unitStr, LEFT);
 
 #if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
   // visibility
@@ -566,497 +557,534 @@ void drawCurrentConditions(const owm_current_t &current,
     dataStr = String(static_cast<int>(round(vis)));
   }
 #ifdef UNITS_DIST_KILOMETERS
-  if (vis >= 10) {
+  if (vis >= 10)
+  {
 #endif
 #ifdef UNITS_DIST_MILES
-  if (vis >= 6) {
+    if (vis >= 6)
+    {
 #endif
-    dataStr = "> " + dataStr;
-  }
-  drawString(170 + 48, 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, dataStr, LEFT);
-  display.setFont(&FONT_8pt8b);
-  drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2,
-             unitStr, LEFT);
+      dataStr = "> " + dataStr;
+    }
+    drawString(170 + 48, 5+ 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, dataStr, LEFT);
+    display.setFont(&FONT_8pt8b);
+    drawString(display.getCursorX(), 5+ 204 + 17 / 2 + (48 + 8) * 3 + 48 / 2, unitStr, LEFT);
 
-  // indoor humidity
-  display.setFont(&FONT_12pt8b);
-  if (!std::isnan(inHumidity))
-  {
-    dataStr = String(static_cast<int>(round(inHumidity)));
-  }
-  else
-  {
-    dataStr = "--";
-  }
-  drawString(170 + 48, 204 + 17 / 2 + (48 + 8) * 4 + 48 / 2, dataStr, LEFT);
-  display.setFont(&FONT_8pt8b);
-  drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * 4 + 48 / 2,
-             "%", LEFT);
+    // indoor humidity
+    display.setFont(&FONT_12pt8b);
+    if (!std::isnan(inHumidity))
+    {
+      dataStr = String(static_cast<int>(round(inHumidity)));
+    }
+    else
+    {
+      dataStr = "--";
+    }
+    drawString(170 + 48, 5+ 204 + 17 / 2 + (48 + 8) * 4 + 48 / 2, dataStr, LEFT);
+    display.setFont(&FONT_8pt8b);
+    drawString(display.getCursorX(), 5+ 204 + 17 / 2 + (48 + 8) * 4 + 48 / 2, "%", LEFT);
 #endif // defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
-  return;
-} // end drawCurrentConditions
+    return;
+  } // end drawCurrentConditions
 
-/* This function is responsible for drawing the five day forecast.
- */
-void drawForecast(owm_daily_t *const daily, tm timeInfo)
-{
-  // 5 day, forecast
-  String hiStr, loStr;
-  for (int i = 0; i < 5; ++i)
+  /* This function is responsible for drawing the five day forecast.
+   */
+/*
+  void drawForecast(owm_daily_t *const daily, tm timeInfo)
   {
+    // 5 day, forecast
+    String hiStr, loStr;
+    for (int i = 0; i < 5; ++i)
+    {
 #if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
-    int x = 398 + (i * 82);
+      int x = 398 + (i * 82);
 #elif defined(DISP_BW_V1)
     int x = 318 + (i * 64);
 #endif
-    // icons
-    display.drawInvertedBitmap(x, 98 + 69 / 2 - 32 - 6,
-                               getForecastBitmap64(daily[i]),
-                               64, 64, GxEPD_BLACK);
-    // day of week label
-    display.setFont(&FONT_11pt8b);
-    char dayBuffer[8] = {};
-    _strftime(dayBuffer, sizeof(dayBuffer), "%a", &timeInfo); // abbrv'd day
-    drawString(x + 31 - 2, 98 + 69 / 2 - 32 - 26 - 6 + 16, dayBuffer, CENTER);
-    timeInfo.tm_wday = (timeInfo.tm_wday + 1) % 7; // increment to next day
+      // icons
+      display.drawInvertedBitmap(x, 98 + 69 / 2 - 32 - 6,
+                                 getForecastBitmap64(daily[i]),
+                                 64, 64, GxEPD_BLACK);
+      // day of week label
+      display.setFont(&FONT_11pt8b);
+      char dayBuffer[8] = {};
+      _strftime(dayBuffer, sizeof(dayBuffer), "%a", &timeInfo); // abbrv'd day
+      drawString(x + 31 - 2, 98 + 69 / 2 - 32 - 26 - 6 + 16, dayBuffer, CENTER);
+      timeInfo.tm_wday = (timeInfo.tm_wday + 1) % 7; // increment to next day
 
-    // high | low
-    display.setFont(&FONT_8pt8b);
-    drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
+      // high | low
+      display.setFont(&FONT_10pt8b);
+      drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
 #ifdef UNITS_TEMP_KELVIN
-  hiStr = String(static_cast<int>(round(daily[i].temp.max)));
-  loStr = String(static_cast<int>(round(daily[i].temp.min)));
+      hiStr = String(static_cast<int>(round(daily[i].temp.max)));
+      loStr = String(static_cast<int>(round(daily[i].temp.min)));
 #endif
 #ifdef UNITS_TEMP_CELSIUS
-  hiStr = String(static_cast<int>(round(kelvin_to_celsius(daily[i].temp.max)
-                 ))) + "\xB0";
-  loStr = String(static_cast<int>(round(kelvin_to_celsius(daily[i].temp.min)
-                 ))) + "\xB0";
+      hiStr = String(static_cast<int>(round(kelvin_to_celsius(daily[i].temp.max)))) + "\xB0";
+      loStr = String(static_cast<int>(round(kelvin_to_celsius(daily[i].temp.min)))) + "\xB0";
 #endif
 #ifdef UNITS_TEMP_FAHRENHEIT
-  hiStr = String(static_cast<int>(round(kelvin_to_fahrenheit(daily[i].temp.max)
-                 ))) + "\xB0";
-  loStr = String(static_cast<int>(round(kelvin_to_fahrenheit(daily[i].temp.min)
-                 ))) + "\xB0";
+      hiStr = String(static_cast<int>(round(kelvin_to_fahrenheit(daily[i].temp.max)))) + "\xB0";
+      loStr = String(static_cast<int>(round(kelvin_to_fahrenheit(daily[i].temp.min)))) + "\xB0";
 #endif
-    drawString(x + 31 - 4, 98 + 69 / 2 + 38 - 6 + 12, hiStr, RIGHT);
-    drawString(x + 31 + 5, 98 + 69 / 2 + 38 - 6 + 12, loStr, LEFT);
-  }
+      drawString(x + 31 - 8, 98 + 69 / 2 + 38 - 6 + 12, loStr, RIGHT);
+      drawString(x + 31 + 9, 98 + 69 / 2 + 38 - 6 + 12, hiStr, LEFT);
+    }
 
-  return;
-} // end drawForecast
-
-/* This function is responsible for drawing the current alerts if any.
- * Up to 2 alerts can be drawn.
- */
-void drawAlerts(std::vector<owm_alerts_t> &alerts,
-                const String &city, const String &date)
-{
-#if DEBUG_LEVEL >= 1
-  Serial.println("[debug] alerts.size()    : " + String(alerts.size()));
-#endif
-  if (alerts.size() == 0)
-  { // no alerts to draw
     return;
-  }
+  } // end drawForecast
+*/
 
-  int *ignore_list = (int *) calloc(alerts.size(), sizeof(*ignore_list));
-  int *alert_indices = (int *) calloc(alerts.size(), sizeof(*alert_indices));
-  if (!ignore_list || !alert_indices)
+
+/* This function is responsible for drawing the five day forecast.
+   */
+  void drawForecast(owm_daily_t *const daily, tm timeInfo)
   {
-    Serial.println("Error: Failed to allocate memory while handling alerts.");
-    free(ignore_list);
-    free(alert_indices);
-    return;
-  }
-
-  // Converts all event text and tags to lowercase, removes extra information,
-  // and filters out redundant alerts of lesser urgency.
-  filterAlerts(alerts, ignore_list);
-
-  // limit alert text width so that is does not run into the location or date
-  // strings
-  display.setFont(&FONT_16pt8b);
-  int city_w = getStringWidth(city);
-  display.setFont(&FONT_12pt8b);
-  int date_w = getStringWidth(date);
-  int max_w = DISP_WIDTH - 2 - std::max(city_w, date_w) - (196 + 4) - 8;
-
-  // find indices of valid alerts
-  int num_valid_alerts = 0;
-#if DEBUG_LEVEL >= 1
-  Serial.print("[debug] ignore_list      : [ ");
-#endif
-  for (int i = 0; i < alerts.size(); ++i)
-  {
-#if DEBUG_LEVEL >= 1
-    Serial.print(String(ignore_list[i]) + " ");
-#endif
-    if (!ignore_list[i])
+    // 5 day, forecast
+    String hiStr, loStr;
+    for (int i = 0; i < 5; ++i)
     {
-      alert_indices[num_valid_alerts] = i;
-      ++num_valid_alerts;
-    }
-  }
-#if DEBUG_LEVEL >= 1
-  Serial.println("]\n[debug] num_valid_alerts : " + String(num_valid_alerts));
+#if defined(DISP_BW_V2) || defined(DISP_3C_B) || defined(DISP_7C_F)
+      int x = 400 + (i * 82);
+#elif defined(DISP_BW_V1)
+    int x = 318 + (i * 64);
 #endif
-
-  if (num_valid_alerts == 1)
-  { // 1 alert
-    // adjust max width to for 48x48 icons
-    max_w -= 48;
-
-    owm_alerts_t &cur_alert = alerts[alert_indices[0]];
-    display.drawInvertedBitmap(196, 8, getAlertBitmap48(cur_alert), 48, 48,
-                               ACCENT_COLOR);
-    // must be called after getAlertBitmap
-    toTitleCase(cur_alert.event);
-
-    display.setFont(&FONT_14pt8b);
-    if (getStringWidth(cur_alert.event) <= max_w)
-    { // Fits on a single line, draw along bottom
-      drawString(196 + 48 + 4, 24 + 8 - 12 + 20 + 1, cur_alert.event, LEFT);
-    }
-    else
-    { // use smaller font
+      int top = 84;
+      // icons
+      //display.drawInvertedBitmap(x, 98 + 69 / 2 - 32 - 6, getForecastBitmap64(daily[i]), 64, 64, GxEPD_BLACK);
+      display.drawInvertedBitmap(x, top+10, getForecastBitmap64(daily[i]), 64, 64, FOREGROUND_COLOR);
+      // day of week label
       display.setFont(&FONT_12pt8b);
-      if (getStringWidth(cur_alert.event) <= max_w)
-      { // Fits on a single line with smaller font, draw along bottom
-        drawString(196 + 48 + 4, 24 + 8 - 12 + 17 + 1, cur_alert.event, LEFT);
-      }
-      else
-      { // Does not fit on a single line, draw higher to allow room for 2nd line
-        drawMultiLnString(196 + 48 + 4, 24 + 8 - 12 + 17 - 11,
-                          cur_alert.event, LEFT, max_w, 2, 23);
+      char dayBuffer[8] = {};
+      _strftime(dayBuffer, sizeof(dayBuffer), "%a", &timeInfo); // abbrv'd day
+      //drawString(x + 31 - 2, 98 + 69 / 2 - 32 - 26 - 6 + 16, dayBuffer, CENTER);
+      drawString(x + 31 - 2, top, dayBuffer, CENTER);
+      timeInfo.tm_wday = (timeInfo.tm_wday + 1) % 7; // increment to next day
+
+      // high | low
+      display.setFont(&FONT_10pt8b);
+      //drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
+#ifdef UNITS_TEMP_KELVIN
+      hiStr = String(static_cast<int>(round(daily[i].temp.max)));
+      loStr = String(static_cast<int>(round(daily[i].temp.min)));
+#endif
+#ifdef UNITS_TEMP_CELSIUS
+      hiStr = String(static_cast<int>(round(kelvin_to_celsius(daily[i].temp.max)))) + "\xB0";
+      loStr = String(static_cast<int>(round(kelvin_to_celsius(daily[i].temp.min)))) + "\xB0";
+#endif
+#ifdef UNITS_TEMP_FAHRENHEIT
+      hiStr = String(static_cast<int>(round(kelvin_to_fahrenheit(daily[i].temp.max)))) + "\xB0";
+      loStr = String(static_cast<int>(round(kelvin_to_fahrenheit(daily[i].temp.min)))) + "\xB0";
+#endif
+      drawString(x + 32, top+64+10+15, hiStr, CENTER);
+      drawString(x + 32, top+64+10+15+23, loStr, CENTER);
+    }
+
+    return;
+  } // end drawForecast
+
+
+
+  /* This function is responsible for drawing the current alerts if any.
+   * Up to 2 alerts can be drawn.
+   */
+  void drawAlerts(std::vector<owm_alerts_t> & alerts,
+                  const String &city, const String &date)
+  {
+#if DEBUG_LEVEL >= 1
+    Serial.println("[debug] alerts.size()    : " + String(alerts.size()));
+#endif
+    if (alerts.size() == 0)
+    { // no alerts to draw
+      return;
+    }
+
+    int *ignore_list = (int *)calloc(alerts.size(), sizeof(*ignore_list));
+    int *alert_indices = (int *)calloc(alerts.size(), sizeof(*alert_indices));
+    if (!ignore_list || !alert_indices)
+    {
+      Serial.println("Error: Failed to allocate memory while handling alerts.");
+      free(ignore_list);
+      free(alert_indices);
+      return;
+    }
+
+    // Converts all event text and tags to lowercase, removes extra information,
+    // and filters out redundant alerts of lesser urgency.
+    filterAlerts(alerts, ignore_list);
+
+    // limit alert text width so that is does not run into the location or date
+    // strings
+    display.setFont(&FONT_16pt8b);
+    int city_w = getStringWidth(city);
+    display.setFont(&FONT_12pt8b);
+    int date_w = getStringWidth(date);
+    int max_w = DISP_WIDTH - 2 - std::max(city_w, date_w) - (196 + 4) - 8;
+
+    // find indices of valid alerts
+    int num_valid_alerts = 0;
+#if DEBUG_LEVEL >= 1
+    Serial.print("[debug] ignore_list      : [ ");
+#endif
+    for (int i = 0; i < alerts.size(); ++i)
+    {
+#if DEBUG_LEVEL >= 1
+      Serial.print(String(ignore_list[i]) + " ");
+#endif
+      if (!ignore_list[i])
+      {
+        alert_indices[num_valid_alerts] = i;
+        ++num_valid_alerts;
       }
     }
-  } // end 1 alert
-  else
-  { // 2 alerts
-    // adjust max width to for 32x32 icons
-    max_w -= 32;
+#if DEBUG_LEVEL >= 1
+    Serial.println("]\n[debug] num_valid_alerts : " + String(num_valid_alerts));
+#endif
 
-    display.setFont(&FONT_12pt8b);
-    for (int i = 0; i < 2; ++i)
-    {
-      owm_alerts_t &cur_alert = alerts[alert_indices[i]];
+    if (num_valid_alerts == 1)
+    { // 1 alert
+      // adjust max width to for 48x48 icons
+      max_w -= 48;
 
-      display.drawInvertedBitmap(196, (i * 32), getAlertBitmap32(cur_alert),
-                                 32, 32, ACCENT_COLOR);
+      owm_alerts_t &cur_alert = alerts[alert_indices[0]];
+      display.drawInvertedBitmap(196, 8, getAlertBitmap48(cur_alert), 48, 48,
+                                 ACCENT_COLOR);
       // must be called after getAlertBitmap
       toTitleCase(cur_alert.event);
 
-      drawMultiLnString(196 + 32 + 3, 5 + 17 + (i * 32),
-                        cur_alert.event, LEFT, max_w, 1, 0);
-    } // end for-loop
-  } // end 2 alerts
-
-  free(ignore_list);
-  free(alert_indices);
-
-  return;
-} // end drawAlerts
-
-/* This function is responsible for drawing the city string and date
- * information in the top right corner.
- */
-void drawLocationDate(const String &city, const String &date)
-{
-  // location, date
-  display.setFont(&FONT_16pt8b);
-  drawString(DISP_WIDTH - 2, 23, city, RIGHT, ACCENT_COLOR);
-  display.setFont(&FONT_12pt8b);
-  drawString(DISP_WIDTH - 2, 30 + 4 + 17, date, RIGHT);
-  return;
-} // end drawLocationDate
-
-/* The % operator in C++ is not a true modulo operator but it instead a
- * remainder operator. The remainder operator and modulo operator are equivalent
- * for positive numbers, but not for negatives. The follow implementation of the
- * modulo operator works for +/-a and +b.
- */
-inline int modulo(int a, int b)
-{
-  const int result = a % b;
-  return result >= 0 ? result : result + b;
-}
-
-/* This function is responsible for drawing the outlook graph for the specified
- * number of hours(up to 47).
- */
-void drawOutlookGraph(owm_hourly_t *const hourly, tm timeInfo)
-{
-
-  const int xPos0 = 350;
-  const int xPos1 = DISP_WIDTH - 46;
-  const int yPos0 = 216;
-  const int yPos1 = DISP_HEIGHT - 46;
-
-  // x axis
-  display.drawLine(xPos0, yPos1    , xPos1, yPos1    , GxEPD_BLACK);
-  display.drawLine(xPos0, yPos1 - 1, xPos1, yPos1 - 1, GxEPD_BLACK);
-
-  // calculate y max/min and intervals
-  int yMajorTicks = 5;
-#ifdef UNITS_TEMP_KELVIN
-  float tempMin = hourly[0].temp;
-#endif
-#ifdef UNITS_TEMP_CELSIUS
-  float tempMin = kelvin_to_celsius(hourly[0].temp);
-#endif
-#ifdef UNITS_TEMP_FAHRENHEIT
-  float tempMin = kelvin_to_fahrenheit(hourly[0].temp);
-#endif
-  float tempMax = tempMin;
-  int yTempMajorTicks = 5;
-  float newTemp = 0;
-  for (int i = 1; i < HOURLY_GRAPH_MAX; ++i)
-  {
-#ifdef UNITS_TEMP_KELVIN
-    newTemp = hourly[i].temp;
-#endif
-#ifdef UNITS_TEMP_CELSIUS
-    newTemp = kelvin_to_celsius(hourly[i].temp);
-#endif
-#ifdef UNITS_TEMP_FAHRENHEIT
-    newTemp = kelvin_to_fahrenheit(hourly[i].temp);
-#endif
-    tempMin = std::min(tempMin, newTemp);
-    tempMax = std::max(tempMax, newTemp);
-  }
-  int tempBoundMin = static_cast<int>(tempMin - 1)
-                      - modulo(static_cast<int>(tempMin - 1), yTempMajorTicks);
-  int tempBoundMax = static_cast<int>(tempMax + 1)
-   + (yTempMajorTicks - modulo(static_cast<int>(tempMax + 1), yTempMajorTicks));
-
-  // while we have to many major ticks then increase the step
-  while ((tempBoundMax - tempBoundMin) / yTempMajorTicks > yMajorTicks)
-  {
-    yTempMajorTicks += 5;
-    tempBoundMin = static_cast<int>(tempMin - 1)
-                      - modulo(static_cast<int>(tempMin - 1), yTempMajorTicks);
-    tempBoundMax = static_cast<int>(tempMax + 1) + (yTempMajorTicks
-                      - modulo(static_cast<int>(tempMax + 1), yTempMajorTicks));
-  }
-  // while we have not enough major ticks add to either bound
-  while ((tempBoundMax - tempBoundMin) / yTempMajorTicks < yMajorTicks)
-  {
-    // add to whatever bound is closer to the actual min/max
-    if (tempMin - tempBoundMin <= tempBoundMax - tempMax)
-    {
-      tempBoundMin -= yTempMajorTicks;
-    }
+      display.setFont(&FONT_14pt8b);
+      if (getStringWidth(cur_alert.event) <= max_w)
+      { // Fits on a single line, draw along bottom
+        drawString(196 + 48 + 4, 24 + 8 - 12 + 20 + 1, cur_alert.event, LEFT);
+      }
+      else
+      { // use smaller font
+        display.setFont(&FONT_12pt8b);
+        if (getStringWidth(cur_alert.event) <= max_w)
+        { // Fits on a single line with smaller font, draw along bottom
+          drawString(196 + 48 + 4, 24 + 8 - 12 + 17 + 1, cur_alert.event, LEFT);
+        }
+        else
+        { // Does not fit on a single line, draw higher to allow room for 2nd line
+          drawMultiLnString(196 + 48 + 4, 24 + 8 - 12 + 17 - 11,
+                            cur_alert.event, LEFT, max_w, 2, 23);
+        }
+      }
+    } // end 1 alert
     else
-    {
-      tempBoundMax += yTempMajorTicks;
-    }
-  }
+    { // 2 alerts
+      // adjust max width to for 32x32 icons
+      max_w -= 32;
 
-  // draw y axis
-  float yInterval = (yPos1 - yPos0) / static_cast<float>(yMajorTicks);
-  for (int i = 0; i <= yMajorTicks; ++i)
-  {
-    String dataStr;
-    int yTick = static_cast<int>(yPos0 + (i * yInterval));
-    display.setFont(&FONT_8pt8b);
-    // Temperature
-    dataStr = String(tempBoundMax - (i * yTempMajorTicks));
-#if defined(UNITS_TEMP_CELSIUS) || defined(UNITS_TEMP_FAHRENHEIT)
-    dataStr += "\xB0";
-#endif
-    drawString(xPos0 - 8, yTick + 4, dataStr, RIGHT, ACCENT_COLOR);
-
-    // PoP
-    dataStr = String(100 - (i * 20));
-    drawString(xPos1 + 8, yTick + 4, dataStr, LEFT);
-    display.setFont(&FONT_5pt8b);
-    drawString(display.getCursorX(), yTick + 4, "%", LEFT);
-
-    // draw dotted line
-    if (i < yMajorTicks)
-    {
-      for (int x = xPos0; x <= xPos1 + 1; x += 3)
+      display.setFont(&FONT_12pt8b);
+      for (int i = 0; i < 2; ++i)
       {
-        display.drawPixel(x, yTick + (yTick % 2), GxEPD_BLACK);
-      }
-    }
+        owm_alerts_t &cur_alert = alerts[alert_indices[i]];
+
+        display.drawInvertedBitmap(196, (i * 32), getAlertBitmap32(cur_alert),
+                                   32, 32, ACCENT_COLOR);
+        // must be called after getAlertBitmap
+        toTitleCase(cur_alert.event);
+
+        drawMultiLnString(196 + 32 + 3, 5 + 17 + (i * 32),
+                          cur_alert.event, LEFT, max_w, 1, 0);
+      } // end for-loop
+    }   // end 2 alerts
+
+    free(ignore_list);
+    free(alert_indices);
+
+    return;
+  } // end drawAlerts
+
+  /* This function is responsible for drawing the city string and date
+   * information in the top right corner.
+   */
+  void drawLocationDate(const String &city, const String &date)
+  {
+    // location, date
+
+    display.setFont(&FONT_16pt8b);
+    drawString(DISP_WIDTH - 2, 23, city, RIGHT, ACCENT_COLOR);
+    display.setFont(&FONT_10pt8b);
+    drawString(DISP_WIDTH - 2, 30 + 4 + 17, date, RIGHT);
+    return;
+  } // end drawLocationDate
+
+  /* The % operator in C++ is not a true modulo operator but it instead a
+   * remainder operator. The remainder operator and modulo operator are equivalent
+   * for positive numbers, but not for negatives. The follow implementation of the
+   * modulo operator works for +/-a and +b.
+   */
+  inline int modulo(int a, int b)
+  {
+    const int result = a % b;
+    return result >= 0 ? result : result + b;
   }
 
-  int xMaxTicks = 8;
-  int hourInterval = static_cast<int>(ceil(HOURLY_GRAPH_MAX
-                                           / static_cast<float>(xMaxTicks)));
-  float xInterval = (xPos1 - xPos0 - 1) / static_cast<float>(HOURLY_GRAPH_MAX);
-  display.setFont(&FONT_8pt8b);
-  for (int i = 0; i < HOURLY_GRAPH_MAX; ++i)
+  /* This function is responsible for drawing the outlook graph for the specified
+   * number of hours(up to 47).
+   */
+  void drawOutlookGraph(owm_hourly_t *const hourly, tm timeInfo)
   {
-    int xTick = static_cast<int>(xPos0 + (i * xInterval));
-    int x0_t, x1_t, y0_t, y1_t;
-    float yPxPerUnit;
 
-    if (i > 0)
-    {
-      // temperature
-      x0_t = static_cast<int>(round(xPos0 + ((i - 1) * xInterval)
-                                    + (0.5 * xInterval) ));
-      x1_t = static_cast<int>(round(xPos0 + (i * xInterval)
-                                    + (0.5 * xInterval) ));
-      yPxPerUnit = (yPos1 - yPos0)
-                   / static_cast<float>(tempBoundMax - tempBoundMin);
+    const int xPos0 = 350;
+    const int xPos1 = DISP_WIDTH - 46;
+    const int yPos0 = 216;
+    const int yPos1 = DISP_HEIGHT - 46;
+
+    // x axis
+    display.drawLine(xPos0, yPos1, xPos1, yPos1, FOREGROUND_COLOR);
+    display.drawLine(xPos0, yPos1 - 1, xPos1, yPos1 - 1, FOREGROUND_COLOR);
+
+    // calculate y max/min and intervals
+    int yMajorTicks = 5;
 #ifdef UNITS_TEMP_KELVIN
-      y0_t = static_cast<int>(round(
-                yPos1 - (yPxPerUnit * ((hourly[i - 1].temp) - tempBoundMin)) ));
-      y1_t = static_cast<int>(round(
-                yPos1 - (yPxPerUnit * ((hourly[i    ].temp) - tempBoundMin)) ));
+    float tempMin = hourly[0].temp;
 #endif
 #ifdef UNITS_TEMP_CELSIUS
-      y0_t = static_cast<int>(round(
-                yPos1 - (yPxPerUnit * (kelvin_to_celsius(hourly[i - 1].temp)
-                         - tempBoundMin)) ));
-      y1_t = static_cast<int>(round(
-                yPos1 - (yPxPerUnit * (kelvin_to_celsius(hourly[i    ].temp)
-                         - tempBoundMin)) ));
+    float tempMin = kelvin_to_celsius(hourly[0].temp);
 #endif
 #ifdef UNITS_TEMP_FAHRENHEIT
-      y0_t = static_cast<int>(round(
-                yPos1 - (yPxPerUnit * (kelvin_to_fahrenheit(hourly[i - 1].temp)
-                         - tempBoundMin)) ));
-      y1_t = static_cast<int>(round(
-                yPos1 - (yPxPerUnit * (kelvin_to_fahrenheit(hourly[i    ].temp)
-                         - tempBoundMin)) ));
+    float tempMin = kelvin_to_fahrenheit(hourly[0].temp);
 #endif
-
-      // graph temperature
-      display.drawLine(x0_t    , y0_t    , x1_t    , y1_t    , ACCENT_COLOR);
-      display.drawLine(x0_t    , y0_t + 1, x1_t    , y1_t + 1, ACCENT_COLOR);
-      display.drawLine(x0_t - 1, y0_t    , x1_t - 1, y1_t    , ACCENT_COLOR);
-    }
-
-    // PoP
-    x0_t = static_cast<int>(round( xPos0 + 1 + (i * xInterval)));
-    x1_t = static_cast<int>(round( xPos0 + 1 + ((i + 1) * xInterval) ));
-    yPxPerUnit = (yPos1 - yPos0) / 100.0;
-    y0_t = static_cast<int>(round(
-                            yPos1 - (yPxPerUnit * (hourly[i    ].pop * 100)) ));
-    y1_t = yPos1;
-
-    // graph PoP
-    for (int y = y1_t - 1; y > y0_t; y -= 2)
+    float tempMax = tempMin;
+    int yTempMajorTicks = 5;
+    float newTemp = 0;
+    for (int i = 1; i < HOURLY_GRAPH_MAX; ++i)
     {
-      for (int x = x0_t + (x0_t % 2); x < x1_t; x += 2)
+#ifdef UNITS_TEMP_KELVIN
+      newTemp = hourly[i].temp;
+#endif
+#ifdef UNITS_TEMP_CELSIUS
+      newTemp = kelvin_to_celsius(hourly[i].temp);
+#endif
+#ifdef UNITS_TEMP_FAHRENHEIT
+      newTemp = kelvin_to_fahrenheit(hourly[i].temp);
+#endif
+      tempMin = std::min(tempMin, newTemp);
+      tempMax = std::max(tempMax, newTemp);
+    }
+    int tempBoundMin = static_cast<int>(tempMin - 1) - modulo(static_cast<int>(tempMin - 1), yTempMajorTicks);
+    int tempBoundMax = static_cast<int>(tempMax + 1) + (yTempMajorTicks - modulo(static_cast<int>(tempMax + 1), yTempMajorTicks));
+
+    // while we have to many major ticks then increase the step
+    while ((tempBoundMax - tempBoundMin) / yTempMajorTicks > yMajorTicks)
+    {
+      yTempMajorTicks += 5;
+      tempBoundMin = static_cast<int>(tempMin - 1) - modulo(static_cast<int>(tempMin - 1), yTempMajorTicks);
+      tempBoundMax = static_cast<int>(tempMax + 1) + (yTempMajorTicks - modulo(static_cast<int>(tempMax + 1), yTempMajorTicks));
+    }
+    // while we have not enough major ticks add to either bound
+    while ((tempBoundMax - tempBoundMin) / yTempMajorTicks < yMajorTicks)
+    {
+      // add to whatever bound is closer to the actual min/max
+      if (tempMin - tempBoundMin <= tempBoundMax - tempMax)
       {
-        display.drawPixel(x, y, GxEPD_BLACK);
+        tempBoundMin -= yTempMajorTicks;
+      }
+      else
+      {
+        tempBoundMax += yTempMajorTicks;
       }
     }
 
-    if ((i % hourInterval) == 0)
+    // draw y axis
+    float yInterval = (yPos1 - yPos0) / static_cast<float>(yMajorTicks);
+    for (int i = 0; i <= yMajorTicks; ++i)
     {
+      String dataStr;
+      int yTick = static_cast<int>(yPos0 + (i * yInterval));
+      display.setFont(&FONT_8pt8b);
+      // Temperature
+      dataStr = String(tempBoundMax - (i * yTempMajorTicks));
+#if defined(UNITS_TEMP_CELSIUS) || defined(UNITS_TEMP_FAHRENHEIT)
+      dataStr += "\xB0";
+#endif
+      drawString(xPos0 - 8, yTick + 4, dataStr, RIGHT, ACCENT_COLOR);
+
+      // PoP
+      dataStr = String(100 - (i * 20));
+      drawString(xPos1 + 8, yTick + 4, dataStr, LEFT);
+      display.setFont(&FONT_5pt8b);
+      drawString(display.getCursorX(), yTick + 4, "%", LEFT);
+
+      // draw dotted line
+      if (i < yMajorTicks)
+      {
+        for (int x = xPos0; x <= xPos1 + 1; x += 3)
+        {
+          display.drawPixel(x, yTick + (yTick % 2), FOREGROUND_COLOR);
+        }
+      }
+    }
+
+    int xMaxTicks = 8;
+    int hourInterval = static_cast<int>(ceil(HOURLY_GRAPH_MAX / static_cast<float>(xMaxTicks)));
+    float xInterval = (xPos1 - xPos0 - 1) / static_cast<float>(HOURLY_GRAPH_MAX);
+    display.setFont(&FONT_8pt8b);
+    for (int i = 0; i < HOURLY_GRAPH_MAX; ++i)
+    {
+      int xTick = static_cast<int>(xPos0 + (i * xInterval));
+      int x0_t, x1_t, y0_t, y1_t;
+      float yPxPerUnit;
+
+      if (i > 0)
+      {
+        // temperature
+        x0_t = static_cast<int>(round(xPos0 + ((i - 1) * xInterval) + (0.5 * xInterval)));
+        x1_t = static_cast<int>(round(xPos0 + (i * xInterval) + (0.5 * xInterval)));
+        yPxPerUnit = (yPos1 - yPos0) / static_cast<float>(tempBoundMax - tempBoundMin);
+#ifdef UNITS_TEMP_KELVIN
+        y0_t = static_cast<int>(round(
+            yPos1 - (yPxPerUnit * ((hourly[i - 1].temp) - tempBoundMin))));
+        y1_t = static_cast<int>(round(
+            yPos1 - (yPxPerUnit * ((hourly[i].temp) - tempBoundMin))));
+#endif
+#ifdef UNITS_TEMP_CELSIUS
+        y0_t = static_cast<int>(round(
+            yPos1 - (yPxPerUnit * (kelvin_to_celsius(hourly[i - 1].temp) - tempBoundMin))));
+        y1_t = static_cast<int>(round(
+            yPos1 - (yPxPerUnit * (kelvin_to_celsius(hourly[i].temp) - tempBoundMin))));
+#endif
+#ifdef UNITS_TEMP_FAHRENHEIT
+        y0_t = static_cast<int>(round(
+            yPos1 - (yPxPerUnit * (kelvin_to_fahrenheit(hourly[i - 1].temp) - tempBoundMin))));
+        y1_t = static_cast<int>(round(
+            yPos1 - (yPxPerUnit * (kelvin_to_fahrenheit(hourly[i].temp) - tempBoundMin))));
+#endif
+
+        // graph temperature
+        display.drawLine(x0_t, y0_t, x1_t, y1_t, ACCENT_COLOR);
+        display.drawLine(x0_t, y0_t - 1, x1_t, y1_t - 1, ACCENT_COLOR);
+        display.drawLine(x0_t, y0_t + 1, x1_t, y1_t + 1, ACCENT_COLOR);
+        display.drawLine(x0_t, y0_t + 2, x1_t, y1_t + 2, ACCENT_COLOR);
+        display.drawLine(x0_t - 1, y0_t, x1_t - 1, y1_t, ACCENT_COLOR);
+      }
+
+      // PoP
+      x0_t = static_cast<int>(round(xPos0 + 1 + (i * xInterval)));
+      x1_t = static_cast<int>(round(xPos0 + 1 + ((i + 1) * xInterval)));
+      yPxPerUnit = (yPos1 - yPos0) / 100.0;
+      y0_t = static_cast<int>(round(
+          yPos1 - (yPxPerUnit * (hourly[i].pop * 100))));
+      y1_t = yPos1;
+
+      // graph PoP
+      for (int y = y1_t - 1; y > y0_t; y -= 2)
+      {
+        for (int x = x0_t + (x0_t % 2); x < x1_t; x += 2)
+        {
+          display.drawPixel(x, y, FOREGROUND_COLOR);
+        }
+      }
+
+      if ((i % hourInterval) == 0)
+      {
+        // draw x tick marks
+        display.drawLine(xTick, yPos1 + 1, xTick, yPos1 + 4, FOREGROUND_COLOR);
+        display.drawLine(xTick + 1, yPos1 + 1, xTick + 1, yPos1 + 4, FOREGROUND_COLOR);
+        // draw x axis labels
+        char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
+        time_t ts = hourly[i].dt;
+        tm *timeInfo = localtime(&ts);
+        _strftime(timeBuffer, sizeof(timeBuffer), HOUR_FORMAT, timeInfo);
+        drawString(xTick, yPos1 + 1 + 12 + 4 + 3, timeBuffer, CENTER);
+      }
+    }
+
+    // draw the last tick mark
+    if ((HOURLY_GRAPH_MAX % hourInterval) == 0)
+    {
+      int xTick = static_cast<int>(round(xPos0 + (HOURLY_GRAPH_MAX * xInterval)));
       // draw x tick marks
-      display.drawLine(xTick    , yPos1 + 1, xTick    , yPos1 + 4, GxEPD_BLACK);
-      display.drawLine(xTick + 1, yPos1 + 1, xTick + 1, yPos1 + 4, GxEPD_BLACK);
+      display.drawLine(xTick, yPos1 + 1, xTick, yPos1 + 4, FOREGROUND_COLOR);
+      display.drawLine(xTick + 1, yPos1 + 1, xTick + 1, yPos1 + 4, FOREGROUND_COLOR);
       // draw x axis labels
       char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
-      time_t ts = hourly[i].dt;
+      time_t ts = hourly[HOURLY_GRAPH_MAX - 1].dt + 3600;
       tm *timeInfo = localtime(&ts);
       _strftime(timeBuffer, sizeof(timeBuffer), HOUR_FORMAT, timeInfo);
       drawString(xTick, yPos1 + 1 + 12 + 4 + 3, timeBuffer, CENTER);
     }
 
-  }
+    return;
+  } // end drawOutlookGraph
 
-  // draw the last tick mark
-  if ((HOURLY_GRAPH_MAX % hourInterval) == 0)
+  /* This function is responsible for drawing the status bar along the bottom of
+   * the display.
+   */
+  void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
+                     int rssi, double batVoltage)
   {
-    int xTick = static_cast<int>(round(xPos0 + (HOURLY_GRAPH_MAX * xInterval)));
-    // draw x tick marks
-    display.drawLine(xTick    , yPos1 + 1, xTick    , yPos1 + 4, GxEPD_BLACK);
-    display.drawLine(xTick + 1, yPos1 + 1, xTick + 1, yPos1 + 4, GxEPD_BLACK);
-    // draw x axis labels
-    char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
-    time_t ts = hourly[HOURLY_GRAPH_MAX - 1].dt + 3600;
-    tm *timeInfo = localtime(&ts);
-    _strftime(timeBuffer, sizeof(timeBuffer), HOUR_FORMAT, timeInfo);
-    drawString(xTick, yPos1 + 1 + 12 + 4 + 3, timeBuffer, CENTER);
-  }
+    String dataStr;
+    uint16_t dataColor = FOREGROUND_COLOR;
+    display.setFont(&FONT_6pt8b);
+    int pos = DISP_WIDTH - 2;
+    const int sp = 2;
 
-  return;
-} // end drawOutlookGraph
+    // battery
+    int batPercent = calcBatPercent(batVoltage);
+    if (batVoltage < BATTERY_WARN_VOLTAGE)
+    {
+      dataColor = ACCENT_COLOR;
+    }
+    dataStr = String(batPercent) + "% (" + String(round(100.0 * batVoltage) / 100.0, 2) + "v)";
+    drawString(pos, DISP_HEIGHT - 1 - 2, dataStr, RIGHT, dataColor);
+    pos -= getStringWidth(dataStr) + 25;
+    //display.drawBitmap(pos, DISP_HEIGHT - 1 - 17, getBatBitmap24(batPercent), 24, 24, dataColor);
+    display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 17, getBatBitmap24(batPercent), 24, 24, dataColor);
+    pos -= sp + 9;
 
-/* This function is responsible for drawing the status bar along the bottom of
- * the display.
- */
-void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
-                   int rssi, double batVoltage)
-{
-  String dataStr;
-  uint16_t dataColor = GxEPD_BLACK;
-  display.setFont(&FONT_6pt8b);
-  int pos = DISP_WIDTH - 2;
-  const int sp = 2;
+    // WiFi
+    dataStr = String(getWiFidesc(rssi));
+    dataColor = rssi >= -70 ? FOREGROUND_COLOR : ACCENT_COLOR;
+    if (rssi != 0)
+    {
+      dataStr += " (" + String(rssi) + "dBm)";
+    }
+    drawString(pos, DISP_HEIGHT - 1 - 2, dataStr, RIGHT, dataColor);
+    pos -= getStringWidth(dataStr) + 19;
+    display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 13, getWiFiBitmap16(rssi),
+                               16, 16, dataColor);
+    pos -= sp + 8;
 
-  // battery
-  int batPercent = calcBatPercent(batVoltage);
-  if (batVoltage < BATTERY_WARN_VOLTAGE) {
+    // last refresh
+    dataColor = FOREGROUND_COLOR;
+    drawString(pos, DISP_HEIGHT - 1 - 2, refreshTimeStr, RIGHT, dataColor);
+    pos -= getStringWidth(refreshTimeStr) + 25;
+    display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 21, wi_refresh_32x32,
+                               32, 32, dataColor);
+    pos -= sp;
+
+    // status
     dataColor = ACCENT_COLOR;
-  }
-  dataStr = String(batPercent) + "% ("
-            + String( round(100.0 * batVoltage) / 100.0, 2 ) + "v)";
-  drawString(pos, DISP_HEIGHT - 1 - 2, dataStr, RIGHT, dataColor);
-  pos -= getStringWidth(dataStr) + 25;
-  display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 17,
-                             getBatBitmap24(batPercent), 24, 24, dataColor);
-  pos -= sp + 9;
+    if (!statusStr.isEmpty())
+    {
+      drawString(pos, DISP_HEIGHT - 1 - 2, statusStr, RIGHT, dataColor);
+      pos -= getStringWidth(statusStr) + 24;
+      display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 18, error_icon_24x24,
+                                 24, 24, dataColor);
+    }
 
-  // WiFi
-  dataStr = String(getWiFidesc(rssi));
-  dataColor = rssi >= -70 ? GxEPD_BLACK : ACCENT_COLOR;
-  if (rssi != 0)
+    return;
+  } // end drawStatusBar
+
+  /* This function is responsible for drawing prominent error messages to the
+   * screen.
+   */
+  void drawError(const uint8_t *bitmap_196x196,
+                 const String &errMsgLn1, const String &errMsgLn2)
   {
-    dataStr += " (" + String(rssi) + "dBm)";
-  }
-  drawString(pos, DISP_HEIGHT - 1 - 2, dataStr, RIGHT, dataColor);
-  pos -= getStringWidth(dataStr) + 19;
-  display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 13, getWiFiBitmap16(rssi),
-                             16, 16, dataColor);
-  pos -= sp + 8;
-
-  // last refresh
-  dataColor = GxEPD_BLACK;
-  drawString(pos, DISP_HEIGHT - 1 - 2, refreshTimeStr, RIGHT, dataColor);
-  pos -= getStringWidth(refreshTimeStr) + 25;
-  display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 21, wi_refresh_32x32,
-                             32, 32, dataColor);
-  pos -= sp;
-
-  // status
-  dataColor = ACCENT_COLOR;
-  if (!statusStr.isEmpty())
-  {
-    drawString(pos, DISP_HEIGHT - 1 - 2, statusStr, RIGHT, dataColor);
-    pos -= getStringWidth(statusStr) + 24;
-    display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 18, error_icon_24x24,
-                               24, 24, dataColor);
-  }
-
-  return;
-} // end drawStatusBar
-
-/* This function is responsible for drawing prominent error messages to the
- * screen.
- */
-void drawError(const uint8_t *bitmap_196x196,
-               const String &errMsgLn1, const String &errMsgLn2)
-{
-  display.setFont(&FONT_26pt8b);
-  drawString(DISP_WIDTH / 2,
-             DISP_HEIGHT / 2 + 196 / 2 + 21,
-             errMsgLn1, CENTER);
-  drawString(DISP_WIDTH / 2,
-             DISP_HEIGHT / 2 + 196 / 2 + 76,
-             errMsgLn2, CENTER);
-  display.drawInvertedBitmap(DISP_WIDTH / 2 - 196 / 2,
-                             DISP_HEIGHT / 2 - 196 / 2 - 21,
-                             bitmap_196x196, 196, 196, ACCENT_COLOR);
-  return;
-} // end drawError
-
+    display.setFont(&FONT_26pt8b);
+    drawString(DISP_WIDTH / 2,
+               DISP_HEIGHT / 2 + 196 / 2 + 21,
+               errMsgLn1, CENTER);
+    drawString(DISP_WIDTH / 2,
+               DISP_HEIGHT / 2 + 196 / 2 + 76,
+               errMsgLn2, CENTER);
+    display.drawInvertedBitmap(DISP_WIDTH / 2 - 196 / 2,
+                               DISP_HEIGHT / 2 - 196 / 2 - 21,
+                               bitmap_196x196, 196, 196, ACCENT_COLOR);
+    return;
+  } // end drawError

@@ -38,15 +38,16 @@
 #include "client_utils.h"
 #include "config.h"
 #include "display_utils.h"
-#include "renderer.h"
+// #include "renderer.h"
+#include "conversions.h"
 #ifndef USE_HTTP
-  #include <WiFiClientSecure.h>
+#include <WiFiClientSecure.h>
 #endif
 
 #ifdef USE_HTTP
-  static const uint16_t OWM_PORT = 80;
+static const uint16_t OWM_PORT = 80;
 #else
-  static const uint16_t OWM_PORT = 443;
+static const uint16_t OWM_PORT = 443;
 #endif
 
 /* Power-on and connect WiFi.
@@ -121,13 +122,11 @@ bool waitForSNTPSync(tm *timeInfo)
 {
   // Wait for SNTP synchronization to complete
   unsigned long timeout = millis() + NTP_TIMEOUT;
-  if ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET)
-      && (millis() < timeout))
+  if ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) && (millis() < timeout))
   {
     Serial.print("Waiting for SNTP synchronization.");
     delay(100); // ms
-    while ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET)
-        && (millis() < timeout))
+    while ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) && (millis() < timeout))
     {
       Serial.print(".");
       delay(100); // ms
@@ -144,27 +143,22 @@ bool waitForSNTPSync(tm *timeInfo)
  * Returns the HTTP Status Code.
  */
 #ifdef USE_HTTP
-  int getOWMonecall(WiFiClient &client, owm_resp_onecall_t &r)
+int getOWMonecall(WiFiClient &client, owm_resp_onecall_t &r)
 #else
-  int getOWMonecall(WiFiClientSecure &client, owm_resp_onecall_t &r)
+int getOWMonecall(WiFiClientSecure &client, owm_resp_onecall_t &r)
 #endif
 {
   int attempts = 0;
   bool rxSuccess = false;
   DeserializationError jsonErr = {};
-  String uri = "/data/" + OWM_ONECALL_VERSION
-               + "/onecall?lat=" + LAT + "&lon=" + LON + "&lang=" + OWM_LANG
-               + "&units=standard&exclude=minutely&appid=" + OWM_APIKEY;
+  String uri = "/data/" + OWM_ONECALL_VERSION + "/onecall?lat=" + LAT + "&lon=" + LON + "&lang=" + OWM_LANG + "&units=standard&exclude=minutely&appid=" + OWM_APIKEY;
   // This string is printed to terminal to help with debugging. The API key is
   // censored to reduce the risk of users exposing their key.
-  String sanitizedUri = OWM_ENDPOINT
-               + "/data/" + OWM_ONECALL_VERSION
-               + "/onecall?lat=" + LAT + "&lon=" + LON + "&lang=" + OWM_LANG
-               + "&units=standard&exclude=minutely&appid={API key}";
+  String sanitizedUri = OWM_ENDPOINT + "/data/" + OWM_ONECALL_VERSION + "/onecall?lat=" + LAT + "&lon=" + LON + "&lang=" + OWM_LANG + "&units=standard&exclude=minutely&appid={API key}";
 
   Serial.println("Attempting HTTP Request: " + sanitizedUri);
   int httpResponse = 0;
-  while (!rxSuccess && attempts < 3)
+  while (!rxSuccess && attempts < 5)
   {
     HTTPClient http;
     http.begin(client, OWM_ENDPOINT, OWM_PORT, uri);
@@ -182,8 +176,7 @@ bool waitForSNTPSync(tm *timeInfo)
     }
     client.stop();
     http.end();
-    Serial.println("  " + String(httpResponse, DEC) + " "
-                   + getHttpResponsePhrase(httpResponse));
+    Serial.println("  " + String(httpResponse, DEC) + " " + getHttpResponsePhrase(httpResponse));
     ++attempts;
   }
 
@@ -197,9 +190,9 @@ bool waitForSNTPSync(tm *timeInfo)
  * Returns the HTTP Status Code.
  */
 #ifdef USE_HTTP
-  int getOWMairpollution(WiFiClient &client, owm_resp_air_pollution_t &r)
+int getOWMairpollution(WiFiClient &client, owm_resp_air_pollution_t &r)
 #else
-  int getOWMairpollution(WiFiClientSecure &client, owm_resp_air_pollution_t &r)
+int getOWMairpollution(WiFiClientSecure &client, owm_resp_air_pollution_t &r)
 #endif
 {
   int attempts = 0;
@@ -216,19 +209,15 @@ bool waitForSNTPSync(tm *timeInfo)
   char startStr[22];
   sprintf(endStr, "%lld", end);
   sprintf(startStr, "%lld", start);
-  String uri = "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON
-               + "&start=" + startStr + "&end=" + endStr
-               + "&appid=" + OWM_APIKEY;
+  String uri = "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON + "&start=" + startStr + "&end=" + endStr + "&appid=" + OWM_APIKEY;
   // This string is printed to terminal to help with debugging. The API key is
   // censored to reduce the risk of users exposing their key.
   String sanitizedUri = OWM_ENDPOINT +
-               "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON
-               + "&start=" + startStr + "&end=" + endStr
-               + "&appid={API key}";
+                        "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON + "&start=" + startStr + "&end=" + endStr + "&appid={API key}";
 
   Serial.println("Attempting HTTP Request: " + sanitizedUri);
   int httpResponse = 0;
-  while (!rxSuccess && attempts < 3)
+  while (!rxSuccess && attempts < 5)
   {
     HTTPClient http;
     http.begin(client, OWM_ENDPOINT, OWM_PORT, uri);
@@ -245,25 +234,159 @@ bool waitForSNTPSync(tm *timeInfo)
     }
     client.stop();
     http.end();
-    Serial.println("  " + String(httpResponse, DEC) + " "
-                   + getHttpResponsePhrase(httpResponse));
+    Serial.println("  " + String(httpResponse, DEC) + " " + getHttpResponsePhrase(httpResponse));
     ++attempts;
   }
 
   return httpResponse;
 } // getOWMairpollution
 
-/* Prints debug information about heap usage.
- */
-void printHeapUsage() {
-  Serial.println("[debug] Heap Size       : "
-                 + String(ESP.getHeapSize()) + " B");
-  Serial.println("[debug] Available Heap  : "
-                 + String(ESP.getFreeHeap()) + " B");
-  Serial.println("[debug] Min Free Heap   : "
-                 + String(ESP.getMinFreeHeap()) + " B");
-  Serial.println("[debug] Max Allocatable : "
-                 + String(ESP.getMaxAllocHeap()) + " B");
-  return;
+int getHAState(WiFiClient &client, String state, float &inTemp, float &inHumidity, owm_resp_onecall_t &r)
+{
+  int result = -1;
+  int attempts = 0;
+  bool rxSuccess = false;
+
+  state = "sensor.aggregated_current_weather";
+
+  DeserializationError jsonErr = {};
+  String uri = "/api/states/" + state;
+  String sanitizedUri = HA_ENDPOINT + ":" + String(HA_PORT) + uri;
+  Serial.print("Attempting HTTP Request: " + sanitizedUri + " - ");
+
+  int httpResponse = 0;
+  while (!rxSuccess && attempts < 5)
+  {
+    HTTPClient http;
+    http.begin(client, HA_ENDPOINT, HA_PORT, uri);
+    http.addHeader("Authorization", String(HA_APIKEY));
+
+    httpResponse = http.GET();
+    if (httpResponse == HTTP_CODE_OK)
+    {
+      StaticJsonDocument<1024> doc;
+      jsonErr = deserializeJson(doc, http.getStream());
+      if (jsonErr)
+      {
+        rxSuccess = false;
+        // -100 offset distinguishes these errors from httpClient errors
+        httpResponse = -100 - static_cast<int>(jsonErr.code());
+        break;
+      }
+
+      String state = doc["state"].as<String>();
+      jsonErr = deserializeJson(doc, state);
+      if (jsonErr)
+      {
+        rxSuccess = false;
+        // -100 offset distinguishes these errors from httpClient errors
+        httpResponse = -100 - static_cast<int>(jsonErr.code());
+        break;
+      }
+
+      float tIn = NAN;
+      float tOut = NAN;
+      int fIn = NAN;
+      int fOut = NAN;
+      float p = NAN;
+      float wA = NAN;
+      int wD = NAN;
+
+      tIn = doc["tIn"].as<String>().equals("unknown") ? NAN : doc["tIn"].as<float>();
+      tOut = doc["tOut"].as<String>().equals("unknown") ? NAN : doc["tOut"].as<float>();
+      fIn = doc["fIn"].as<String>().equals("unknown") ? NAN : doc["fIn"].as<float>();
+      fOut = doc["fOut"].as<String>().equals("unknown") ? NAN : doc["fOut"].as<float>();
+      p = doc["p"].as<String>().equals("unknown") ? NAN : doc["p"].as<float>();
+      wA = doc["wA"].as<String>().equals("unknown") ? NAN : doc["wA"].as<float>();
+      wD = doc["wD"].as<String>().equals("unknown") ? NAN : doc["wD"].as<float>();
+      
+      inTemp = tIn;
+      inHumidity = fIn;
+
+      r.current.temp = celsius_to_kelvin ( tOut );
+      r.current.humidity = fOut;
+      r.current.pressure = p;
+      r.current.wind_deg = wD;
+      r.current.wind_speed = wA;
+      
+      if (r.current.wind_speed >= 5) {
+        r.current.feels_like = celsius_to_kelvin ( 13.12 + 0.6215 * r.current.temp + (0.3965 *  r.current.temp - 11.37) * pow(r.current.wind_speed, 0.16));
+      }
+
+
+      Serial.println ( state);
+
+      rxSuccess = !jsonErr;
+    }
+    client.stop();
+    http.end();
+    Serial.println("  " + String(httpResponse, DEC) + " " + getHttpResponsePhrase(httpResponse));
+    result  = httpResponse;
+    ++attempts;
+  }
+
+  return result;
 }
 
+/* Perform an HTTP GET request to HA
+ *
+ * Returns the HTTP Status Code.
+ */
+// #ifdef USE_HTTP
+int getHAData(WiFiClient &client, owm_resp_onecall_t &r)
+// #else
+//   int getHAData(WiFiClientSecure &client, String  sensor)
+// #endif
+{
+  int attempts = 0;
+  bool rxSuccess = false;
+  DeserializationError jsonErr = {};
+  String uri = "/api/states/sensor.indoor_indoor_indoor_outdoor_temperature";
+  // This string is printed to terminal to help with debugging. The API key is
+  // censored to reduce the risk of users exposing their key.
+  String sanitizedUri = HA_ENDPOINT + ":" + String(HA_PORT) + uri;
+
+  Serial.println("Attempting HTTP Request: " + sanitizedUri);
+  int httpResponse = 0;
+  while (!rxSuccess && attempts < 3)
+  {
+    HTTPClient http;
+    http.begin(client, HA_ENDPOINT, HA_PORT, uri);
+    // http.begin ( "http://"+HA_ENDPOINT+":" + String(HA_PORT) + "/api/states/sensor.indoor_indoor_indoor_outdoor_temperature");
+    http.addHeader("Authorization", String(HA_APIKEY));
+
+    httpResponse = http.GET();
+    if (httpResponse == HTTP_CODE_OK)
+    {
+      StaticJsonDocument<1024> doc;
+      jsonErr = deserializeJson(doc, http.getStream());
+      Serial.println(r.current.temp);
+      r.current.temp = celsius_to_kelvin(doc["state"].as<float>()); // "14"
+      Serial.println(r.current.temp);
+      if (jsonErr)
+      {
+        rxSuccess = false;
+        // -100 offset distinguishes these errors from httpClient errors
+        httpResponse = -100 - static_cast<int>(jsonErr.code());
+      }
+      rxSuccess = !jsonErr;
+    }
+    client.stop();
+    http.end();
+    Serial.println("  " + String(httpResponse, DEC) + " " + getHttpResponsePhrase(httpResponse));
+    ++attempts;
+  }
+
+  return httpResponse;
+} // getOWMonecall
+
+/* Prints debug information about heap usage.
+ */
+void printHeapUsage()
+{
+  Serial.println("[debug] Heap Size       : " + String(ESP.getHeapSize()) + " B");
+  Serial.println("[debug] Available Heap  : " + String(ESP.getFreeHeap()) + " B");
+  Serial.println("[debug] Min Free Heap   : " + String(ESP.getMinFreeHeap()) + " B");
+  Serial.println("[debug] Max Allocatable : " + String(ESP.getMaxAllocHeap()) + " B");
+  return;
+}

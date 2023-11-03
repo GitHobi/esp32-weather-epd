@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_OPENSANS_REGULAR_H__
 #define __FONTS_OPENSANS_REGULAR_H__
 #include "OpenSans_Regular/OpenSans_Regular_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b OpenSans_Regular_8pt8b
 #define FONT_9pt8b OpenSans_Regular_9pt8b
 #endif
+*/

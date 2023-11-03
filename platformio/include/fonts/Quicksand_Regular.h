@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_QUICKSAND_REGULAR_H__
 #define __FONTS_QUICKSAND_REGULAR_H__
 #include "Quicksand_Regular/Quicksand_Regular_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b Quicksand_Regular_8pt8b
 #define FONT_9pt8b Quicksand_Regular_9pt8b
 #endif
+*/

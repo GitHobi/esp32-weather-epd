@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_UBUNTUMONO_R_H__
 #define __FONTS_UBUNTUMONO_R_H__
 #include "UbuntuMono_R/UbuntuMono_R_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b UbuntuMono_R_8pt8b
 #define FONT_9pt8b UbuntuMono_R_9pt8b
 #endif
+*/

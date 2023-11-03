@@ -54,7 +54,7 @@
 //   English (United States)         en_US
 //   French (France)                 fr_FR
 //   Dutch (Belgium)                 nl_BE
-#define LOCALE en_US
+#define LOCALE de_DE
 
 // UNITS
 // Define exactly one macro for each unit below.
@@ -64,7 +64,7 @@
 //   Imperial : Fahrenheit
 // #define UNITS_TEMP_KELVIN
 // #define UNITS_TEMP_CELSIUS
-#define UNITS_TEMP_FAHRENHEIT
+#define UNITS_TEMP_CELSIUS
 
 // UNITS - WIND SPEED
 //   Metric   : Kilometers per Hour
@@ -72,7 +72,7 @@
 // #define UNITS_SPEED_METERSPERSECOND
 // #define UNITS_SPEED_FEETPERSECOND
 // #define UNITS_SPEED_KILOMETERSPERHOUR
-#define UNITS_SPEED_MILESPERHOUR
+#define UNITS_SPEED_KILOMETERSPERHOUR
 // #define UNITS_SPEED_KNOTS
 // #define UNITS_SPEED_BEAUFORT
 
@@ -82,7 +82,7 @@
 // #define UNITS_PRES_HECTOPASCALS
 // #define UNITS_PRES_PASCALS
 // #define UNITS_PRES_MILLIMETERSOFMERCURY
-#define UNITS_PRES_INCHESOFMERCURY
+#define UNITS_PRES_HECTOPASCALS
 // #define UNITS_PRES_MILLIBARS
 // #define UNITS_PRES_ATMOSPHERES
 // #define UNITS_PRES_GRAMSPERSQUARECENTIMETER
@@ -92,7 +92,7 @@
 //   Metric   : Kilometers
 //   Imperial : Miles
 // #define UNITS_DIST_KILOMETERS
-#define UNITS_DIST_MILES
+#define UNITS_DIST_KILOMETERS
 
 // AIR QUALITY INDEX
 // Seemingly every country uses a different scale for Air Quality Index (AQI).
@@ -104,7 +104,7 @@
 //   HONG_KONG_AQHI       INDIA_AQI            MAINLAND_CHINA_AQI
 //   SINGAPORE_PSI        SOUTH_KOREA_CAI      UNITED_KINGDOM_DAQI
 //   UNITED_STATES_AQI
-#define UNITED_STATES_AQI
+#define EUROPE_CAQI
 
 // Hypertext Transfer Protocol (HTTP)
 // HTTP
@@ -125,8 +125,8 @@
 //   The current certificate for api.openweathermap.org is valid until
 //   2030-12-31 23:59:59.
 // (uncomment exactly one)
-// #define USE_HTTP
-#define USE_HTTPS_NO_CERT_VERIF
+#define USE_HTTP
+//#define USE_HTTPS_NO_CERT_VERIF
 // #define USE_HTTPS_WITH_CERT_VERIF
 
 // WIND ICON PRECISION
@@ -178,7 +178,9 @@
 //   FreeSans font, but this project supports the ability to modularly swap
 //   fonts. Using a font other than FreeSans may result in undesired spacing or
 //   other artifacts.
-#define FONT_HEADER "fonts/FreeSans.h"
+//#define FONT_HEADER "fonts/FreeSans.h"
+#define FONT_HEADER "fonts/Roboto_Regular.h"
+
 
 // DISABLE ALERTS
 //   The handling of alerts is complex. Each country has a unique national alert
@@ -210,6 +212,9 @@ extern const uint8_t BME_ADDRESS;
 extern const char *WIFI_SSID;
 extern const char *WIFI_PASSWORD;
 extern const unsigned long WIFI_TIMEOUT;
+extern const String HA_APIKEY;
+extern const String HA_ENDPOINT;
+extern const uint16_t HA_PORT;
 extern const String OWM_APIKEY;
 extern const String OWM_ENDPOINT;
 extern const String OWM_ONECALL_VERSION;

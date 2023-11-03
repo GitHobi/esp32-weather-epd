@@ -39,6 +39,12 @@ bool printLocalTime(tm *timeInfo);
   int getOWMairpollution(WiFiClientSecure &client, owm_resp_air_pollution_t &r);
 #endif
 
+int getHAState ( WiFiClient &client, String state, float &inTemp, float &inHumidity, owm_resp_onecall_t &r);
+//#ifdef USE_HTTP
+  int getHAData(WiFiClient &client, owm_resp_onecall_t &r);
+//#else
+//  int getHAData(WiFiClientSecure &client, String  sensor);
+//#endif
 
 #endif
 

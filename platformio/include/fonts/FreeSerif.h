@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_FREESERIF_H__
 #define __FONTS_FREESERIF_H__
 #include "FreeSerif/FreeSerif_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b FreeSerif_8pt8b
 #define FONT_9pt8b FreeSerif_9pt8b
 #endif
+*/

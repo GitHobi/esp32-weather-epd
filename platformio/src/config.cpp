@@ -35,13 +35,18 @@ const uint8_t PIN_BME_SCL = 16;   // 26 for micro-usb firebeetle
 const uint8_t BME_ADDRESS = 0x76; // if sensor does not work, try 0x77
 
 // WIFI
-const char *WIFI_SSID     = "ssid";
-const char *WIFI_PASSWORD = "password";
-const unsigned long WIFI_TIMEOUT = 10000; // ms, WiFi connection timeout.
+const char *WIFI_SSID     = "WLAN-AE5580";
+const char *WIFI_PASSWORD = "2693MA72!FF?";
+const unsigned long WIFI_TIMEOUT = 30000; // ms, WiFi connection timeout.
+
+/// @brief 
+const String HA_APIKEY  = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkZjQ4YzRiYTNiODM0Nzk4YjgxZDNlNzhjYzY3Nzg0YyIsImlhdCI6MTY5ODQ4MTY5OSwiZXhwIjoyMDEzODQxNjk5fQ.pLDb62ajwu1Y9vzgbndFltOQmF_MZkETOG695nr0whY";
+const String HA_ENDPOINT= "fhem";
+const uint16_t HA_PORT = 8123;
 
 // OPENWEATHERMAP API
 // OpenWeatherMap API key, https://openweathermap.org/
-const String OWM_APIKEY   = "abcdefghijklmnopqrstuvwxyz012345";
+const String OWM_APIKEY   = "171e9f68303392b30af50155d351138f";
 const String OWM_ENDPOINT = "api.openweathermap.org";
 // OpenWeatherMap One Call 2.5 API is deprecated for all new free users
 // (accounts created after Summer 2022).
@@ -62,15 +67,15 @@ const String OWM_ONECALL_VERSION = "3.0";
 // LOCATION
 // Set your latitude and longitude.
 // (used to get weather data as part of API requests to OpenWeatherMap)
-const String LAT = "40.7128";
-const String LON = "-74.0060";
+const String LAT = "48.2926645";
+const String LON = "12.974607";
 // City name that will be shown in the top-right corner of the display.
-const String CITY_STRING = "New York";
+const String CITY_STRING = "Eggstetten";
 
 // TIME
 // For list of time zones see
 // https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
-const char *TIMEZONE = "EST5EDT,M3.2.0,M11.1.0";
+const char *TIMEZONE = "CET-1CEST,M3.5.0/2,M10.5.0/3";
 // Time format used when displaying sunrise/set times. (Max 11 characters)
 // For more information about formatting see
 // https://man7.org/linux/man-pages/man3/strftime.3.html
@@ -84,7 +89,8 @@ const char *HOUR_FORMAT = "%H";      // 24-hour ex: 01   23
 // Date format used when displaying date in top-right corner.
 // For more information about formatting see
 // https://man7.org/linux/man-pages/man3/strftime.3.html
-const char *DATE_FORMAT = "%A, %B %e"; // Saturday, January 1
+//const char *DATE_FORMAT = "%A, %B %e"; // Saturday, January 1
+const char *DATE_FORMAT = "%A, %e. %B"; // Saturday, 1. January
 // Date/Time format used when displaying the last refresh time along the bottom
 // of the screen.
 // For more information about formatting see
@@ -96,12 +102,12 @@ const char *NTP_SERVER_1 = "pool.ntp.org";
 const char *NTP_SERVER_2 = "time.nist.gov";
 // If you encounter the 'Failed To Fetch The Time' error, try increasing
 // NTP_TIMEOUT or select closer/lower latency time servers.
-const unsigned long NTP_TIMEOUT = 20000; // ms
+const unsigned long NTP_TIMEOUT = 30000; // ms
 // Sleep duration in minutes. (aka how often esp32 will wake for an update)
 // Aligned to the nearest minute boundary and must evenly divide 60.
 // For example, if set to 30 (minutes) the display will update at 00 or 30
 // minutes past the hour. (range: [2-60])
-const long SLEEP_DURATION = 30;
+const long SLEEP_DURATION = 15;
 // If BED_TIME == WAKE_TIME, then this battery saving feature will be disabled.
 // (range: [0-23])
 const int BED_TIME  = 00; // Last update at 00:00 (midnight) until WAKE_TIME.
@@ -109,7 +115,7 @@ const int WAKE_TIME = 06; // Hour of first update after BED_TIME, 06:00.
 
 // HOURLY OUTLOOK GRAPH
 // Number of hours to display on the outlook graph. (range: [8-48])
-const int HOURLY_GRAPH_MAX = 24;
+const int HOURLY_GRAPH_MAX = 32;
 
 // BATTERY
 // To protect the battery upon LOW_BATTERY_VOLTAGE, the display will cease to
@@ -120,10 +126,10 @@ const int HOURLY_GRAPH_MAX = 24;
 // begin operating again.
 const float BATTERY_WARN_VOLTAGE     = 3.40; // (volts) ~ 10%
 const float LOW_BATTERY_VOLTAGE      = 3.20; // (volts)
-const float VERY_LOW_BATTERY_VOLTAGE = 3.10; // (volts)
-const float CRIT_LOW_BATTERY_VOLTAGE = 3.00; // (volts)
-const unsigned long LOW_BATTERY_SLEEP_INTERVAL      = 30;  // (minutes)
-const unsigned long VERY_LOW_BATTERY_SLEEP_INTERVAL = 120; // (minutes)
+const float VERY_LOW_BATTERY_VOLTAGE = 3.15; // (volts)
+const float CRIT_LOW_BATTERY_VOLTAGE = 3.10; // (volts)
+const unsigned long LOW_BATTERY_SLEEP_INTERVAL      = 60;  // (minutes)
+const unsigned long VERY_LOW_BATTERY_SLEEP_INTERVAL = 240; // (minutes)
 
 // See config.h for the below options
 // E-PAPER PANEL

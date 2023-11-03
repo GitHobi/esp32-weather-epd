@@ -1,5 +1,7 @@
 #ifndef __ICONS_24x24_H__
 #define __ICONS_24x24_H__
+#include "24x24/gesamte_datei.h"
+/*
 #include "24x24/air_filter_24x24.h"
 #include "24x24/battery_0_bar_0deg_24x24.h"
 #include "24x24/battery_0_bar_180deg_24x24.h"
@@ -1042,4 +1044,5 @@
 #include "24x24/wi_wind_beaufort_8_24x24.h"
 #include "24x24/wi_wind_beaufort_9_24x24.h"
 #include "24x24/wi_windy_24x24.h"
+*/
 #endif

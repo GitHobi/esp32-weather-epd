@@ -1,3 +1,4 @@
+/*
 #ifndef __FONTS_RALEWAY_REGULAR_H__
 #define __FONTS_RALEWAY_REGULAR_H__
 #include "Raleway_Regular/Raleway_Regular_10pt8b.h"
@@ -36,3 +37,4 @@
 #define FONT_8pt8b Raleway_Regular_8pt8b
 #define FONT_9pt8b Raleway_Regular_9pt8b
 #endif
+*/

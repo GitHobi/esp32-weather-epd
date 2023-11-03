@@ -1,5 +1,7 @@
 #ifndef __ICONS_32x32_H__
 #define __ICONS_32x32_H__
+#include "32x32/gesamte_datei.h"
+/*
 #include "32x32/air_filter_32x32.h"
 #include "32x32/battery_0_bar_0deg_32x32.h"
 #include "32x32/battery_0_bar_180deg_32x32.h"
@@ -1042,4 +1044,5 @@
 #include "32x32/wi_wind_beaufort_8_32x32.h"
 #include "32x32/wi_wind_beaufort_9_32x32.h"
 #include "32x32/wi_windy_32x32.h"
+*/
 #endif
